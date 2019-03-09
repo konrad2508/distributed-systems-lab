@@ -16,8 +16,6 @@ struct client_args {
 };
 
 void client_routine(client_args args) {
-//    cout << args.clientID << endl << args.listenPort << endl << args.nextPort << endl << args.hasToken << endl << args.selectedProtocol << endl << endl;
-
     string ID = args.clientID;
     auto listenOn = htons(args.listenPort);
     auto sendTo = htons(args.nextPort);
@@ -72,6 +70,34 @@ void client_routine(client_args args) {
         connect(socketSendTo, (SOCKADDR *) &addrSendTo, sizeof(addrSendTo));
     }
 
+    if (args.hasToken) {
+        string toSend = "Hello from " + ID;
+        char buf1[1024];
+        strcpy(buf1, toSend.c_str());
+        send(socketSendTo, buf1, sizeof(buf1), 0);
+        closesocket(socketSendTo);
+
+        char buf2[1024];
+        recv(socketReceiveFrom, buf2, sizeof(buf2), 0);
+        cout << ID << " received msg: " << buf2 << endl;
+        memset(buf2, 0, sizeof(buf2));
+        closesocket(socketReceiveFrom);
+
+    } else {
+        char buf2[1024];
+        recv(socketReceiveFrom, buf2, sizeof(buf2), 0);
+        cout << ID << " received msg: " << buf2 << endl;
+        memset(buf2, 0, sizeof(buf2));
+        closesocket(socketReceiveFrom);
+
+        this_thread::sleep_for(chrono::milliseconds(1000));
+
+        string toSend = "Hello from " + ID;
+        char buf1[1024];
+        strcpy(buf1, toSend.c_str());
+        send(socketSendTo, buf1, sizeof(buf1), 0);
+        closesocket(socketSendTo);
+    }
 }
 
 int main(int argc, char **argv) {
@@ -94,7 +120,7 @@ int main(int argc, char **argv) {
         client_args clientArgs;
 
         stringstream ss;
-        ss << "client" << i;
+        ss << "client" << (i + 1);
         clientArgs.clientID = ss.str();
 
         clientArgs.i = i;
@@ -111,5 +137,6 @@ int main(int argc, char **argv) {
     }
 
     delete[] clients;
+    WSACleanup();
     return 0;
 }
