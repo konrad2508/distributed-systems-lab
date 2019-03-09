@@ -15,6 +15,8 @@ struct client_args {
     int selectedProtocol; // TCP - 1, UDP - 2
 };
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 void client_routine(client_args args) {
     string ID = args.clientID;
     auto listenOn = htons(args.listenPort);
@@ -71,34 +73,34 @@ void client_routine(client_args args) {
     }
 
     if (args.hasToken) {
-        string toSend = "Hello from " + ID;
+        string toSend = ID + "#Hello from " + ID;
         char buf1[1024];
         strcpy(buf1, toSend.c_str());
         send(socketSendTo, buf1, sizeof(buf1), 0);
-        closesocket(socketSendTo);
+    }
 
+    while(true){
         char buf2[1024];
         recv(socketReceiveFrom, buf2, sizeof(buf2), 0);
-        cout << ID << " received msg: " << buf2 << endl;
-        memset(buf2, 0, sizeof(buf2));
-        closesocket(socketReceiveFrom);
 
-    } else {
-        char buf2[1024];
-        recv(socketReceiveFrom, buf2, sizeof(buf2), 0);
-        cout << ID << " received msg: " << buf2 << endl;
+        char* id = strtok(buf2, "#");
+        char* msg = strtok(NULL, "#");
+
+        cout << ID << " received msg for " << id << "; the message is: " << msg << endl;
         memset(buf2, 0, sizeof(buf2));
-        closesocket(socketReceiveFrom);
 
         this_thread::sleep_for(chrono::milliseconds(1000));
 
-        string toSend = "Hello from " + ID;
+        string toSend = ID + "#Hello from " + ID;
         char buf1[1024];
         strcpy(buf1, toSend.c_str());
         send(socketSendTo, buf1, sizeof(buf1), 0);
-        closesocket(socketSendTo);
     }
+
+    closesocket(socketSendTo);
+    closesocket(socketReceiveFrom);
 }
+#pragma clang diagnostic pop
 
 int main(int argc, char **argv) {
     int numberOfClients = atoi(argv[1]);
