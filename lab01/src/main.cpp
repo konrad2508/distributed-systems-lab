@@ -137,7 +137,6 @@ void client_routine_udp(client_args args) {
     addrLoggers.sin_family = AF_INET;
     addrLoggers.sin_port = htons(MULTICAST_PORT);
     socketLoggers = socket(AF_INET, SOCK_DGRAM, 0);
-    bind(socketLoggers, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
     setsockopt(socketLoggers, IPPROTO_IP, IP_MULTICAST_TTL, nullptr, 0);
 
     // client loop
@@ -380,7 +379,6 @@ void client_routine_tcp(client_args args) {
     addrLoggers.sin_family = AF_INET;
     addrLoggers.sin_port = htons(MULTICAST_PORT);
     socketLoggers = socket(AF_INET, SOCK_DGRAM, 0);
-    bind(socketLoggers, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
     setsockopt(socketLoggers, IPPROTO_IP, IP_MULTICAST_TTL, nullptr, 0);
 
     // client loop
