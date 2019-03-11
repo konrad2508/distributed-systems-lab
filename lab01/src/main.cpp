@@ -3,6 +3,10 @@
 #include <thread>
 #include <chrono>
 #include <sstream>
+#include <winsock.h>
+#include <ws2tcpip.h>
+
+#define MULTICAST_PORT 5000
 
 using namespace std;
 
@@ -16,7 +20,6 @@ struct client_args {
     u_short nextPort;
     bool hasToken;
     bool newClient;
-    int selectedProtocol; // TCP - 1, UDP - 2
 };
 
 #pragma clang diagnostic push
@@ -35,6 +38,9 @@ void client_routine_udp(client_args args) {
 
     SOCKET socketBackdoor;
     SOCKADDR_IN addrBackdoor;
+
+    SOCKET socketLoggers;
+    SOCKADDR_IN addrLoggers;
     if (!args.newClient) {
 
         if (args.i == 0) {
@@ -71,64 +77,69 @@ void client_routine_udp(client_args args) {
         }
     } else {
         // new client
-        cout << "hello!1" << endl;
         addrBackdoor.sin_addr.s_addr = inet_addr("127.0.0.1");
         addrBackdoor.sin_family = AF_INET;
         addrBackdoor.sin_port = sendTo;
         socketBackdoor = socket(AF_INET, SOCK_DGRAM, 0);
 
-        cout << "hello!2" << endl;
         stringstream ss;
         ss << ID << "#" << args.listenPort;
         string toSend = ss.str();
         char buf1[1024];
         strcpy(buf1, toSend.c_str());
         sendto(socketBackdoor, buf1, sizeof(buf1), 0, (SOCKADDR *) &addrBackdoor, sizeof(addrBackdoor));
-        cout << "hello!3" << endl;
-        char buf2[1024];
 
+        char buf2[1024];
         SOCKADDR_IN tmp;
         int tmpLength = sizeof(tmp);
         recvfrom(socketBackdoor, buf2, sizeof(buf2), 0, (SOCKADDR *) &tmp, &tmpLength);
-        cout << "recvfrom err: " << WSAGetLastError() << endl;
-        cout << "hello!4" << endl;
-        cout << "msg received: " << buf2 << ": eom" << endl;
+
         char *id = strtok(buf2, "#");
         char *msg = strtok(NULL, "#");
 
         args.nextClientID = id;
         closesocket(socketBackdoor);
-        cout << "hello!5" << endl;
+
 
         addrSendTo.sin_addr.s_addr = inet_addr("127.0.0.1");
         addrSendTo.sin_family = AF_INET;
         addrSendTo.sin_port = stoi(msg);
         socketSendTo = socket(AF_INET, SOCK_DGRAM, 0);
-        cout << "hello!6" << endl;
+
         addrReceiveFrom.sin_addr.s_addr = INADDR_ANY;
         addrReceiveFrom.sin_family = AF_INET;
         addrReceiveFrom.sin_port = listenOn;
-        socketReceiveFrom = socket(AF_INET, SOCK_STREAM, 0);
+        socketReceiveFrom = socket(AF_INET, SOCK_DGRAM, 0);
         bind(socketReceiveFrom, (SOCKADDR *) &addrReceiveFrom, sizeof(addrReceiveFrom));
 
         cout << "New client successfully added." << endl;
-
     }
+
+    addrLoggers.sin_addr.s_addr = inet_addr("224.0.0.3");
+    addrLoggers.sin_family = AF_INET;
+    addrLoggers.sin_port = htons(MULTICAST_PORT);
+    socketLoggers = socket(AF_INET, SOCK_DGRAM, 0);
+    bind(socketLoggers, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
+    setsockopt(socketLoggers, IPPROTO_IP, IP_MULTICAST_TTL, 0, 0);
 
     while (true) {
         char buf2[1024];
         SOCKADDR_IN tmp;
         int tmpLength = sizeof(tmp);
-        recvfrom(socketReceiveFrom, buf2, sizeof(buf2) + 1, 0, (SOCKADDR *) &tmp, &tmpLength);
+        recvfrom(socketReceiveFrom, buf2, sizeof(buf2), 0, (SOCKADDR *) &tmp, &tmpLength);
 
         char *id = strtok(buf2, "#");
         string type = strtok(NULL, "#");
         char *msg = strtok(NULL, "#");
 
         if (ID == id) {
-            cout << ID << " received msg for " << id << "; the message is: " << msg << endl;
+            stringstream sstream;
+            sstream << ID << " received msg: "<< msg << endl;
+            char buf7[1024];
+            strcpy(buf7, sstream.str().c_str());
+            sendto(socketLoggers, buf7, sizeof(buf7), 0, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
 
-            this_thread::sleep_for(chrono::milliseconds(3000));
+            this_thread::sleep_for(chrono::milliseconds(1000));
 
             if (type == "0") {
                 string toSend = args.nextClientID + "#0#Hello from " + ID;
@@ -138,7 +149,6 @@ void client_routine_udp(client_args args) {
             } else {
                 string newNextID = strtok(msg, "$");
                 string newNextPortString = strtok(NULL, "$");
-
                 args.nextClientID = newNextID;
                 args.nextPort = stoi(newNextPortString);
                 addrSendTo.sin_port = args.nextPort;
@@ -166,7 +176,6 @@ void client_routine_udp(client_args args) {
                                      &lengthAddrNewClient);
             if (readBytes != SOCKET_ERROR) {
                 // there is a new client
-                cout << "NEW CLIENT YOOO" << endl;
                 char *newClientID = strtok(buf3, "#");
                 char *newClientListenPort = strtok(NULL, "#");
 
@@ -183,7 +192,11 @@ void client_routine_udp(client_args args) {
                 char buf2[1024];
                 strcpy(buf2, toSend2.c_str());
                 sendto(socketBackdoor, buf2, sizeof(buf2), 0, (SOCKADDR *) &addrNewClient, lengthAddrNewClient);
-                closesocket(socketBackdoor);
+
+                char discard[1024];
+                SOCKADDR_IN discardTmp;
+                int discardTmpLength = sizeof(discardTmp);
+                recvfrom(socketReceiveFrom, buf2, sizeof(buf2), 0, (SOCKADDR *) &discardTmp, &discardTmpLength);
             }
         }
 
@@ -217,6 +230,9 @@ void client_routine_tcp(client_args args) {
 
     SOCKET socketBackdoor;
     SOCKADDR_IN addrBackdoor;
+
+    SOCKET socketLoggers;
+    SOCKADDR_IN addrLoggers;
     if (!args.newClient) {
 
         if (args.i == 0) {
@@ -323,6 +339,13 @@ void client_routine_tcp(client_args args) {
 
     }
 
+    addrLoggers.sin_addr.s_addr = inet_addr("224.0.0.3");
+    addrLoggers.sin_family = AF_INET;
+    addrLoggers.sin_port = htons(MULTICAST_PORT);
+    socketLoggers = socket(AF_INET, SOCK_DGRAM, 0);
+    bind(socketLoggers, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
+    setsockopt(socketLoggers, IPPROTO_IP, IP_MULTICAST_TTL, 0, 0);
+
     while (true) {
         char buf2[1024];
         recv(socketReceiveFrom, buf2, sizeof(buf2), 0);
@@ -332,9 +355,13 @@ void client_routine_tcp(client_args args) {
         char *msg = strtok(NULL, "#");
 
         if (ID == id) {
-            cout << ID << " received msg for " << id << "; the message is: " << msg << endl;
+            stringstream sstream;
+            sstream << ID << " received msg: "<< msg << endl;
+            char buf7[1024];
+            strcpy(buf7, sstream.str().c_str());
+            sendto(socketLoggers, buf7, sizeof(buf7), 0, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
 
-            this_thread::sleep_for(chrono::milliseconds(3000));
+            this_thread::sleep_for(chrono::milliseconds(1000));
 
             if (type == "0") {
                 string toSend = args.nextClientID + "#0#Hello from " + ID;
