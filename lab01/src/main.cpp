@@ -5,6 +5,7 @@
 #include <sstream>
 #include <winsock.h>
 #include <ws2tcpip.h>
+#include <windows.h>
 
 #define MULTICAST_PORT 5000
 
@@ -21,6 +22,15 @@ struct client_args {
     bool hasToken;
     bool newClient;
 };
+
+BOOL WINAPI consoleHandler(DWORD signal) {
+
+    if (signal == CTRL_C_EVENT) {
+        WSACleanup();
+        throw 1;
+    }
+    return TRUE;
+}
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
@@ -95,7 +105,7 @@ void client_routine_udp(client_args args) {
         recvfrom(socketBackdoor, buf2, sizeof(buf2), 0, (SOCKADDR *) &tmp, &tmpLength);
 
         char *id = strtok(buf2, "#");
-        char *msg = strtok(NULL, "#");
+        char *msg = strtok(nullptr, "#");
 
         args.nextClientID = id;
         closesocket(socketBackdoor);
@@ -120,7 +130,7 @@ void client_routine_udp(client_args args) {
     addrLoggers.sin_port = htons(MULTICAST_PORT);
     socketLoggers = socket(AF_INET, SOCK_DGRAM, 0);
     bind(socketLoggers, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
-    setsockopt(socketLoggers, IPPROTO_IP, IP_MULTICAST_TTL, 0, 0);
+    setsockopt(socketLoggers, IPPROTO_IP, IP_MULTICAST_TTL, nullptr, 0);
 
     while (true) {
         char buf2[1024];
@@ -129,12 +139,12 @@ void client_routine_udp(client_args args) {
         recvfrom(socketReceiveFrom, buf2, sizeof(buf2), 0, (SOCKADDR *) &tmp, &tmpLength);
 
         char *id = strtok(buf2, "#");
-        string type = strtok(NULL, "#");
-        char *msg = strtok(NULL, "#");
+        string type = strtok(nullptr, "#");
+        char *msg = strtok(nullptr, "#");
 
         if (ID == id) {
             stringstream sstream;
-            sstream << ID << " received msg: "<< msg << endl;
+            sstream << ID << " received msg: " << msg << endl;
             char buf7[1024];
             strcpy(buf7, sstream.str().c_str());
             sendto(socketLoggers, buf7, sizeof(buf7), 0, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
@@ -148,7 +158,7 @@ void client_routine_udp(client_args args) {
                 sendto(socketSendTo, buf1, sizeof(buf1), 0, (SOCKADDR *) &addrSendTo, sizeof(addrSendTo));
             } else {
                 string newNextID = strtok(msg, "$");
-                string newNextPortString = strtok(NULL, "$");
+                string newNextPortString = strtok(nullptr, "$");
                 args.nextClientID = newNextID;
                 args.nextPort = stoi(newNextPortString);
                 addrSendTo.sin_port = args.nextPort;
@@ -177,7 +187,7 @@ void client_routine_udp(client_args args) {
             if (readBytes != SOCKET_ERROR) {
                 // there is a new client
                 char *newClientID = strtok(buf3, "#");
-                char *newClientListenPort = strtok(NULL, "#");
+                char *newClientListenPort = strtok(nullptr, "#");
 
                 string toSend1 = args.lastClientID + "#1#" + newClientID + "$" + newClientListenPort;
                 char buf1[1024];
@@ -199,11 +209,7 @@ void client_routine_udp(client_args args) {
                 recvfrom(socketReceiveFrom, buf2, sizeof(buf2), 0, (SOCKADDR *) &discardTmp, &discardTmpLength);
             }
         }
-
     }
-
-    closesocket(socketSendTo);
-    closesocket(socketReceiveFrom);
 }
 
 #pragma clang diagnostic pop
@@ -311,7 +317,7 @@ void client_routine_tcp(client_args args) {
         recv(socketBackdoor, buf2, sizeof(buf2), 0);
 
         char *id = strtok(buf2, "#");
-        char *msg = strtok(NULL, "#");
+        char *msg = strtok(nullptr, "#");
 
         args.nextClientID = id;
         closesocket(socketBackdoor);
@@ -344,19 +350,19 @@ void client_routine_tcp(client_args args) {
     addrLoggers.sin_port = htons(MULTICAST_PORT);
     socketLoggers = socket(AF_INET, SOCK_DGRAM, 0);
     bind(socketLoggers, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
-    setsockopt(socketLoggers, IPPROTO_IP, IP_MULTICAST_TTL, 0, 0);
+    setsockopt(socketLoggers, IPPROTO_IP, IP_MULTICAST_TTL, nullptr, 0);
 
     while (true) {
         char buf2[1024];
         recv(socketReceiveFrom, buf2, sizeof(buf2), 0);
 
         char *id = strtok(buf2, "#");
-        string type = strtok(NULL, "#");
-        char *msg = strtok(NULL, "#");
+        string type = strtok(nullptr, "#");
+        char *msg = strtok(nullptr, "#");
 
         if (ID == id) {
             stringstream sstream;
-            sstream << ID << " received msg: "<< msg << endl;
+            sstream << ID << " received msg: " << msg << endl;
             char buf7[1024];
             strcpy(buf7, sstream.str().c_str());
             sendto(socketLoggers, buf7, sizeof(buf7), 0, (SOCKADDR *) &addrLoggers, sizeof(addrLoggers));
@@ -370,7 +376,7 @@ void client_routine_tcp(client_args args) {
                 send(socketSendTo, buf1, sizeof(buf1), 0);
             } else {
                 string newNextID = strtok(msg, "$");
-                string newNextPortString = strtok(NULL, "$");
+                string newNextPortString = strtok(nullptr, "$");
 
                 args.nextClientID = newNextID;
                 args.nextPort = stoi(newNextPortString);
@@ -405,7 +411,7 @@ void client_routine_tcp(client_args args) {
                 recv(socketNewClient, buf3, sizeof(buf3), 0);
 
                 char *newClientID = strtok(buf3, "#");
-                char *newClientListenPort = strtok(NULL, "#");
+                char *newClientListenPort = strtok(nullptr, "#");
 
                 string toSend1 = args.lastClientID + "#1#" + newClientID + "$" + newClientListenPort;
                 char buf1[1024];
@@ -429,9 +435,6 @@ void client_routine_tcp(client_args args) {
         }
 
     }
-
-    closesocket(socketSendTo);
-    closesocket(socketReceiveFrom);
 }
 
 #pragma clang diagnostic pop
@@ -451,9 +454,9 @@ int main(int argc, char **argv) {
 
     WSADATA WSAData;
     WSAStartup(MAKEWORD(2, 0), &WSAData);
+    SetConsoleCtrlHandler(consoleHandler, TRUE);
 
     auto clients = new thread[maxNumberOfClients];
-
     auto clientArgs = new client_args[maxNumberOfClients];
 
     if (protocol == 1) {
@@ -505,6 +508,8 @@ int main(int argc, char **argv) {
             clientArgs[i].newClient = true;
             clients[i] = thread(client_routine_tcp, clientArgs[i]);
         }
+
+        cout << "Maximum number of clients reached" << endl;
 
         for (int i = 0; i < maxNumberOfClients; i++) {
             clients[i].join();
@@ -559,13 +564,14 @@ int main(int argc, char **argv) {
             clients[i] = thread(client_routine_udp, clientArgs[i]);
         }
 
+        cout << "Maximum number of clients reached" << endl;
+
         for (int i = 0; i < maxNumberOfClients; i++) {
             clients[i].join();
         }
     }
 
-
     delete[] clients;
-    WSACleanup();
+    delete[] clientArgs;
     return 0;
 }
