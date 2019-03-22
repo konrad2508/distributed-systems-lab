@@ -1,0 +1,14 @@
+option java_package = "protos";
+option java_outer_classname = "MessageObject";
+
+message BankOperation {
+    required MessageObjectType type = 1;
+    required string key = 2;
+    optional int32 value = 3;
+
+    enum MessageObjectType {
+        NEW_ELEMENT = 0;
+        GET_ELEMENT = 1;
+        RET_ELEMENT = 2;
+    }
+}
