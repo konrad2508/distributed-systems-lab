@@ -16,7 +16,6 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
     private Address ownAddress;
     private HashMap<String, Integer> storage;
     private HashMap<String, Address> foreignStorage;
-    //    private HashMap<String, Address> peers;
     private List<Address> oldAddr;
 
     private Integer toRet;
@@ -122,7 +121,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
             toReturn.removeAll(newAddr);
 
             for (Address addr : toReturn) {
-                foreignStorage.values().remove(addr);
+                while (foreignStorage.values().remove(addr)) ;
             }
 
         }
