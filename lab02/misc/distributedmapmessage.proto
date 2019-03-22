@@ -1,7 +1,7 @@
 option java_package = "protos";
-option java_outer_classname = "MessageObject";
+option java_outer_classname = "protos.MessageObjectProtos";
 
-message BankOperation {
+message MessageObject {
     required MessageObjectType type = 1;
     required string key = 2;
     optional int32 value = 3;

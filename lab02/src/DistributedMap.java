@@ -1,5 +1,7 @@
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.jgroups.*;
 import org.jgroups.util.Util;
+import protos.MessageObjectProtos;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -40,8 +42,13 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
             return storage.get(key);
         } else {
             Address dst = foreignStorage.get(key);
-            MessageObject msgObj = new MessageObject(MessageObjectType.GET_ELEMENT, key);
-            Message msg = new Message(dst, null, msgObj);
+
+            MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
+                    .setType(MessageObjectProtos.MessageObject.MessageObjectType.GET_ELEMENT)
+                    .setKey(key)
+                    .build();
+            byte[] toSend = msgObj.toByteArray();
+            Message msg = new Message(dst, null, toSend);
             toRet = null;
 
             try {
@@ -51,10 +58,8 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
             }
 
             while (true) {
-                synchronized (toRet) {
-                    if (toRet != null) {
-                        return toRet;
-                    }
+                if (toRet != null) {
+                    return toRet;
                 }
 
                 try {
@@ -70,11 +75,15 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
     public void put(String key, Integer value) {
         storage.put(key, value);
         foreignStorage.put(key, ownAddress);
-        MessageObject msgObj = new MessageObject(MessageObjectType.NEW_ELEMENT, key);
-        Message msg = new Message(null, null, msgObj);
+        MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
+                .setType(MessageObjectProtos.MessageObject.MessageObjectType.NEW_ELEMENT)
+                .setKey(key)
+                .build();
+        byte[] toSend = msgObj.toByteArray();
+        Message msg = new Message(null, null, toSend);
 
         try {
-            channel.send(null, msg);
+            channel.send(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -123,13 +132,26 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
     }
 
     public void receive(Message msg) {
-        MessageObject msgObject = (MessageObject) msg.getBuffer();
+        byte[] buf = msg.getBuffer();
+
+        MessageObjectProtos.MessageObject msgObject = null;
+        try {
+            msgObject = MessageObjectProtos.MessageObject.parseFrom(buf);
+        } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
+        }
+
         String key = msgObject.getKey();
 
         switch (msgObject.getType()) {
             case GET_ELEMENT:
-                MessageObject msgReplyObj = new MessageObject(MessageObjectType.RET_ELEMENT, key, storage.get(key));
-                Message msgReply = new Message(msg.getSrc(), null, msgReplyObj);
+                MessageObjectProtos.MessageObject msgReplyObj = MessageObjectProtos.MessageObject.newBuilder()
+                        .setType(MessageObjectProtos.MessageObject.MessageObjectType.RET_ELEMENT)
+                        .setKey(key)
+                        .setValue(storage.get(key))
+                        .build();
+                byte[] toSend = msgReplyObj.toByteArray();
+                Message msgReply = new Message(msg.getSrc(), null, toSend);
 
                 try {
                     channel.send(msgReply);
@@ -140,9 +162,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
                 break;
 
             case RET_ELEMENT:
-                synchronized (toRet) {
-                    toRet = msgObject.getElement();
-                }
+                toRet = msgObject.getValue();
 
                 break;
 
