@@ -103,14 +103,12 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
                 foreignStorage.remove(key);
                 return storage.remove(key);
             } else {
-                Address dst = foreignStorage.get(key);
-
                 MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
                         .setType(MessageObjectProtos.MessageObject.MessageObjectType.REM_ELEMENT)
                         .setKey(key)
                         .build();
                 byte[] toSend = msgObj.toByteArray();
-                Message msg = new Message(dst, null, toSend);
+                Message msg = new Message(null, null, toSend);
                 toRet = null;
 
                 try {
@@ -191,8 +189,9 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
 
         switch (msgObject.getType()) {
             case REM_ELEMENT:
-                storage.remove(key);
                 foreignStorage.remove(key);
+                if (!storage.containsKey(key)) break;
+                storage.remove(key);
             case GET_ELEMENT:
                 MessageObjectProtos.MessageObject msgReplyObj = MessageObjectProtos.MessageObject.newBuilder()
                         .setType(MessageObjectProtos.MessageObject.MessageObjectType.RET_ELEMENT)
