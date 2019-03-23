@@ -37,61 +37,102 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
 
     @Override
     public Integer get(String key) {
-        if (storage.containsKey(key)) {
-            return storage.get(key);
-        } else {
-            Address dst = foreignStorage.get(key);
+        if (containsKey(key)) {
+            if (storage.containsKey(key)) {
+                return storage.get(key);
+            } else {
+                Address dst = foreignStorage.get(key);
 
+                MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
+                        .setType(MessageObjectProtos.MessageObject.MessageObjectType.GET_ELEMENT)
+                        .setKey(key)
+                        .build();
+                byte[] toSend = msgObj.toByteArray();
+                Message msg = new Message(dst, null, toSend);
+                toRet = null;
+
+                try {
+                    channel.send(msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                while (true) {
+                    if (toRet != null) {
+                        return toRet;
+                    }
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public void put(String key, Integer value) {
+        if (!containsKey(key)) {
+            storage.put(key, value);
+            foreignStorage.put(key, ownAddress);
             MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
-                    .setType(MessageObjectProtos.MessageObject.MessageObjectType.GET_ELEMENT)
+                    .setType(MessageObjectProtos.MessageObject.MessageObjectType.NEW_ELEMENT)
                     .setKey(key)
                     .build();
             byte[] toSend = msgObj.toByteArray();
-            Message msg = new Message(dst, null, toSend);
-            toRet = null;
+            Message msg = new Message(null, null, toSend);
 
             try {
                 channel.send(msg);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            while (true) {
-                if (toRet != null) {
-                    return toRet;
-                }
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
         }
-    }
-
-    @Override
-    public void put(String key, Integer value) {
-        storage.put(key, value);
-        foreignStorage.put(key, ownAddress);
-        MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
-                .setType(MessageObjectProtos.MessageObject.MessageObjectType.NEW_ELEMENT)
-                .setKey(key)
-                .build();
-        byte[] toSend = msgObj.toByteArray();
-        Message msg = new Message(null, null, toSend);
-
-        try {
-            channel.send(msg);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
     }
 
     @Override
     public Integer remove(String key) {
-        return null;
+        if (containsKey(key)) {
+            if (storage.containsKey(key)) {
+                foreignStorage.remove(key);
+                return storage.remove(key);
+            } else {
+                Address dst = foreignStorage.get(key);
+
+                MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
+                        .setType(MessageObjectProtos.MessageObject.MessageObjectType.REM_ELEMENT)
+                        .setKey(key)
+                        .build();
+                byte[] toSend = msgObj.toByteArray();
+                Message msg = new Message(dst, null, toSend);
+                toRet = null;
+
+                try {
+                    channel.send(msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                while (true) {
+                    if (toRet != null) {
+                        foreignStorage.remove(key);
+                        return toRet;
+                    }
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } else {
+            return null;
+        }
     }
 
     public void getState(OutputStream output) throws Exception {
@@ -141,13 +182,17 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
         }
 
         String key = msgObject.getKey();
+        Integer value = storage.get(key);
 
         switch (msgObject.getType()) {
+            case REM_ELEMENT:
+                storage.remove(key);
+                foreignStorage.remove(key);
             case GET_ELEMENT:
                 MessageObjectProtos.MessageObject msgReplyObj = MessageObjectProtos.MessageObject.newBuilder()
                         .setType(MessageObjectProtos.MessageObject.MessageObjectType.RET_ELEMENT)
                         .setKey(key)
-                        .setValue(storage.get(key))
+                        .setValue(value)
                         .build();
                 byte[] toSend = msgReplyObj.toByteArray();
                 Message msgReply = new Message(msg.getSrc(), null, toSend);

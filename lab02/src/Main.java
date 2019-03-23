@@ -27,6 +27,11 @@ public class Main {
                 String key = splitted[1];
 
                 System.out.println(client.get(key));
+            } else if (line.startsWith("remove")) {
+                String[] splitted = line.split(" ");
+                String key = splitted[1];
+
+                System.out.println(client.remove(key));
             }
 
         }
