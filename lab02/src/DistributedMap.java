@@ -10,7 +10,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
 
 
 public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
@@ -30,6 +29,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
         channel.setReceiver(this);
         channel.connect(channelName);
         channel.getState(null, 10000);
+        ownAddress = channel.getAddress();
     }
 
     @Override
@@ -142,8 +142,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
     }
 
     public void setState(InputStream input) throws Exception {
-        HashMap<String, Address> map;
-        map = (HashMap<String, Address>) Util.objectFromStream(new DataInputStream(input));
+        HashMap<String, Address> map = (HashMap<String, Address>) Util.objectFromStream(new DataInputStream(input));
         synchronized (foreignStorage) {
             foreignStorage.clear();
             foreignStorage.putAll(map);
@@ -154,10 +153,6 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
         if (new_view instanceof MergeView) {
             handleMerging((MergeView) new_view);
         } else {
-            if (ownAddress == null) {
-                ownAddress = new_view.getMembers().get(new_view.getMembers().size() - 1);
-            }
-
             if (oldAddr != null && oldAddr.size() > new_view.size()) {
                 List<Address> newAddr = new_view.getMembers();
 
@@ -226,6 +221,29 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
         handler.start();
     }
 
+    private static class ViewHandler extends Thread {
+        JChannel channel;
+        MergeView view;
+
+        private ViewHandler(JChannel ch, MergeView view) {
+            this.channel = ch;
+            this.view = view;
+        }
+
+        public void run() {
+            List<View> subGroups = view.getSubgroups();
+            View firstSub = subGroups.get(0);
+            Address local_addr = channel.getAddress();
+            if (!firstSub.getMembers().contains(local_addr)) {
+                try {
+                    channel.getState(null, 30000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     public HashMap<String, Integer> getStorage() {
         return this.storage;
     }
@@ -238,28 +256,4 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
         channel.close();
     }
 
-    private static class ViewHandler extends Thread {
-        JChannel ch;
-        MergeView view;
-
-        private ViewHandler(JChannel ch, MergeView view) {
-            this.ch = ch;
-            this.view = view;
-        }
-
-        public void run() {
-            List<View> subGroups = view.getSubgroups();
-            View firstSub = subGroups.get(0); // picks the first
-            Address local_addr = ch.getAddress();
-            if (!firstSub.getMembers().contains(local_addr)) {
-                try {
-                    ch.getState(null, 30000);
-                } catch (Exception ex) {
-
-                }
-
-            }
-
-        }
-    }
 }

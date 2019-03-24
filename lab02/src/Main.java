@@ -11,27 +11,46 @@ public class Main {
             System.out.flush();
 
             String line = in.readLine().toLowerCase();
-            if (line.startsWith("quit") || line.startsWith("exit")) break;
-            else if (line.startsWith("storage")) {
+
+            if (line.startsWith("quit") || line.startsWith("exit")) {
+                break;
+
+            } else if (line.startsWith("storage")) {
                 System.out.println(client.getStorage());
+
             } else if (line.startsWith("foreign")) {
                 System.out.println(client.getForeignStorage());
+
             } else if (line.startsWith("add")) {
                 String[] splitted = line.split(" ");
                 String key = splitted[1];
                 Integer value = Integer.parseInt(splitted[2]);
 
-                client.put(key, value);
+                if (key == null || value == null) {
+                    System.out.println("Invalid arguments. Usage: add <key> <value>.");
+                } else {
+                    client.put(key, value);
+                }
+
             } else if (line.startsWith("get")) {
                 String[] splitted = line.split(" ");
                 String key = splitted[1];
 
-                System.out.println(client.get(key));
+                if (key == null) {
+                    System.out.println("Invalid argument. Usage: get <key>.");
+                } else {
+                    System.out.println(client.get(key));
+                }
+
             } else if (line.startsWith("remove")) {
                 String[] splitted = line.split(" ");
                 String key = splitted[1];
 
-                System.out.println(client.remove(key));
+                if (key == null) {
+                    System.out.println("Invalid argument. Usage: remove <key>.");
+                } else {
+                    System.out.println(client.remove(key));
+                }
             }
 
         }
