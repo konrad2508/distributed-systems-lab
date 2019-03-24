@@ -1,5 +1,11 @@
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.jgroups.*;
+import org.jgroups.protocols.*;
+import org.jgroups.protocols.pbcast.GMS;
+import org.jgroups.protocols.pbcast.NAKACK2;
+import org.jgroups.protocols.pbcast.STABLE;
+import org.jgroups.protocols.pbcast.STATE_TRANSFER;
+import org.jgroups.stack.ProtocolStack;
 import org.jgroups.util.Util;
 import protos.MessageObjectProtos;
 
@@ -7,6 +13,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,15 +23,37 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
     private JChannel channel;
     private Address ownAddress;
     private HashMap<String, Integer> storage;
-    private HashMap<String, Address> foreignStorage;
+    private HashMap<String, Address> clusterStorage;
     private List<Address> oldAddr;
 
     private Integer toRet;
 
     public DistributedMap(String channelName) throws Exception {
-        this.channel = new JChannel();
+        this.channel = new JChannel(false);
+
+        ProtocolStack stack = new ProtocolStack();
+        channel.setProtocolStack(stack);
+        stack.addProtocol(new UDP().setValue("mcast_group_addr", InetAddress.getByName("230.100.200.87")))
+                .addProtocol(new PING())
+                .addProtocol(new MERGE3())
+                .addProtocol(new FD_SOCK())
+                .addProtocol(new FD_ALL()
+                        .setValue("timeout", 12000)
+                        .setValue("interval", 3000))
+                .addProtocol(new VERIFY_SUSPECT())
+                .addProtocol(new BARRIER())
+                .addProtocol(new NAKACK2())
+                .addProtocol(new UNICAST3())
+                .addProtocol(new STABLE())
+                .addProtocol(new GMS())
+                .addProtocol(new UFC())
+                .addProtocol(new MFC())
+                .addProtocol(new STATE_TRANSFER())
+                .addProtocol(new FRAG2());
+        stack.init();
+
         this.storage = new HashMap<>();
-        this.foreignStorage = new HashMap<>();
+        this.clusterStorage = new HashMap<>();
 
         channel.setReceiver(this);
         channel.connect(channelName);
@@ -34,7 +63,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
 
     @Override
     public boolean containsKey(String key) {
-        return (storage.containsKey(key) || foreignStorage.containsKey(key));
+        return (storage.containsKey(key) || clusterStorage.containsKey(key));
     }
 
     @Override
@@ -43,7 +72,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
             if (storage.containsKey(key)) {
                 return storage.get(key);
             } else {
-                Address dst = foreignStorage.get(key);
+                Address dst = clusterStorage.get(key);
 
                 MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
                         .setType(MessageObjectProtos.MessageObject.MessageObjectType.GET_ELEMENT)
@@ -80,7 +109,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
     public void put(String key, Integer value) {
         if (!containsKey(key)) {
             storage.put(key, value);
-            foreignStorage.put(key, ownAddress);
+            clusterStorage.put(key, ownAddress);
             MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
                     .setType(MessageObjectProtos.MessageObject.MessageObjectType.NEW_ELEMENT)
                     .setKey(key)
@@ -99,27 +128,27 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
     @Override
     public Integer remove(String key) {
         if (containsKey(key)) {
+            MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
+                    .setType(MessageObjectProtos.MessageObject.MessageObjectType.REM_ELEMENT)
+                    .setKey(key)
+                    .build();
+            byte[] toSend = msgObj.toByteArray();
+            Message msg = new Message(null, null, toSend);
+
+            try {
+                channel.send(msg);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             if (storage.containsKey(key)) {
-                foreignStorage.remove(key);
+                clusterStorage.remove(key);
                 return storage.remove(key);
             } else {
-                MessageObjectProtos.MessageObject msgObj = MessageObjectProtos.MessageObject.newBuilder()
-                        .setType(MessageObjectProtos.MessageObject.MessageObjectType.REM_ELEMENT)
-                        .setKey(key)
-                        .build();
-                byte[] toSend = msgObj.toByteArray();
-                Message msg = new Message(null, null, toSend);
                 toRet = null;
-
-                try {
-                    channel.send(msg);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
                 while (true) {
                     if (toRet != null) {
-                        foreignStorage.remove(key);
+                        clusterStorage.remove(key);
                         return toRet;
                     }
 
@@ -136,16 +165,16 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
     }
 
     public void getState(OutputStream output) throws Exception {
-        synchronized (foreignStorage) {
-            Util.objectToStream(foreignStorage, new DataOutputStream(output));
+        synchronized (clusterStorage) {
+            Util.objectToStream(clusterStorage, new DataOutputStream(output));
         }
     }
 
     public void setState(InputStream input) throws Exception {
         HashMap<String, Address> map = (HashMap<String, Address>) Util.objectFromStream(new DataInputStream(input));
-        synchronized (foreignStorage) {
-            foreignStorage.clear();
-            foreignStorage.putAll(map);
+        synchronized (clusterStorage) {
+            clusterStorage.clear();
+            clusterStorage.putAll(map);
         }
     }
 
@@ -160,7 +189,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
                 toReturn.removeAll(newAddr);
 
                 for (Address addr : toReturn) {
-                    while (foreignStorage.values().remove(addr)) ;
+                    while (clusterStorage.values().remove(addr)) ;
                 }
 
             }
@@ -184,7 +213,7 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
 
         switch (msgObject.getType()) {
             case REM_ELEMENT:
-                foreignStorage.remove(key);
+                clusterStorage.remove(key);
                 if (!storage.containsKey(key)) break;
                 storage.remove(key);
             case GET_ELEMENT:
@@ -210,15 +239,23 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
                 break;
 
             case NEW_ELEMENT:
-                foreignStorage.put(key, msg.getSrc());
+                clusterStorage.put(key, msg.getSrc());
                 break;
         }
 
     }
 
+    public HashMap<String, Address> getClusterStorage() {
+        return this.clusterStorage;
+    }
+
     private void handleMerging(MergeView view) {
         ViewHandler handler = new ViewHandler(channel, view);
         handler.start();
+    }
+
+    public HashMap<String, Integer> getStorage() {
+        return this.storage;
     }
 
     private static class ViewHandler extends Thread {
@@ -242,14 +279,6 @@ public class DistributedMap extends ReceiverAdapter implements SimpleStringMap {
                 }
             }
         }
-    }
-
-    public HashMap<String, Integer> getStorage() {
-        return this.storage;
-    }
-
-    public HashMap<String, Address> getForeignStorage() {
-        return this.foreignStorage;
     }
 
     public void disconnect() {

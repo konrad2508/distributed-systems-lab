@@ -3,6 +3,7 @@ import java.io.InputStreamReader;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        System.setProperty("java.net.preferIPv4Stack", "true");
         DistributedMap client = new DistributedMap("channel1");
 
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -16,10 +17,10 @@ public class Main {
                 break;
 
             } else if (line.startsWith("storage")) {
-                System.out.println(client.getStorage());
+                System.out.println(client.getStorage().keySet());
 
-            } else if (line.startsWith("foreign")) {
-                System.out.println(client.getForeignStorage());
+            } else if (line.startsWith("cluster")) {
+                System.out.println(client.getClusterStorage().keySet());
 
             } else if (line.startsWith("add")) {
                 String[] splitted = line.split(" ");
