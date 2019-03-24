@@ -24,12 +24,16 @@ public class Main {
             } else if (line.startsWith("add")) {
                 String[] splitted = line.split(" ");
                 String key = splitted[1];
-                Integer value = Integer.parseInt(splitted[2]);
+                try {
+                    Integer value = Integer.parseInt(splitted[2]);
 
-                if (key == null || value == null) {
+                    if (key == null) {
+                        System.out.println("Invalid arguments. Usage: add <key> <value>.");
+                    } else {
+                        client.put(key, value);
+                    }
+                } catch (NumberFormatException e) {
                     System.out.println("Invalid arguments. Usage: add <key> <value>.");
-                } else {
-                    client.put(key, value);
                 }
 
             } else if (line.startsWith("get")) {
