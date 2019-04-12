@@ -1,0 +1,15 @@
+option java_package = "protos";
+option java_outer_classname = "MessageObjectProtos";
+
+message MessageObject {
+    required MessageObjectType type = 1;
+    required string key = 2;
+    optional int32 value = 3;
+
+    enum MessageObjectType {
+        NEW_ELEMENT = 0;
+        GET_ELEMENT = 1;
+        RET_ELEMENT = 2;
+        REM_ELEMENT = 3;
+    }
+}
