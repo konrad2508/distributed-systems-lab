@@ -45,4 +45,5 @@ if __name__ == '__main__':
     channel.basic_consume(queue=spec2,
                           on_message_callback=callback)
 
+    channel.basic_qos(prefetch_count=1)
     channel.start_consuming()
