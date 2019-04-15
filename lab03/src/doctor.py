@@ -10,7 +10,6 @@ def receiving_callback(ch, method, properties, body):
 
 
 def receiving_routine():
-    channel.queue_declare(queue=doc_q)
     channel.basic_consume(queue=doc_q,
                           auto_ack=True,
                           on_message_callback=receiving_callback)
@@ -21,13 +20,21 @@ if __name__ == '__main__':
     specializations = ('hip', 'knee', 'elbow')
 
     doc_id = input('Enter doctor ID: ')
-    doc_q = 'doc%s' % doc_id
+    doc_q = 'doc.%s' % doc_id
 
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
+
+    channel.queue_declare(queue=doc_q)
     channel.queue_declare(queue='hip')
     channel.queue_declare(queue='knee')
     channel.queue_declare(queue='elbow')
+
+    channel.exchange_declare(exchange='fanout', exchange_type='fanout')
+    channel.exchange_declare(exchange='topic', exchange_type='topic')
+
+    channel.queue_bind(exchange='topic', queue=doc_q, routing_key=doc_q)
+    channel.queue_bind(exchange='fanout', queue=doc_q, routing_key=doc_q)
 
     receiver = Thread(target=receiving_routine)
     receiver.start()
@@ -38,7 +45,7 @@ if __name__ == '__main__':
         action = input('Select action (hip, knee, elbow, exit): ')
         if action.startswith(specializations):
             to_send = str(Msg(doc_q, action, surname, False))
-            channel.basic_publish(exchange='',
+            channel.basic_publish(exchange='topic',
                                   routing_key=action,
                                   body=to_send)
         elif action.startswith('exit'):
