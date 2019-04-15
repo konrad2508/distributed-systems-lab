@@ -6,7 +6,10 @@ from threading import Thread
 
 def receiving_callback(ch, method, properties, body):
     received = Msg.decode(body)
-    print('Received: ' + str(received))
+    if received.sender.startswith('admin'):
+        print('Info message: %s' % received.bodypart)
+    else:
+        print('Received: ' + str(received))
 
 
 def receiving_routine():
@@ -42,7 +45,7 @@ if __name__ == '__main__':
     while True:
         input('Press any key to add a new patient...\n')
         surname = input("Enter patient's surname: ")
-        action = input('Select action (hip, knee, elbow, exit): ')
+        action = input('Select action (hip, knee, elbow): ')
         if action.startswith(specializations):
             to_send = str(Msg(doc_q, action, surname, False))
             channel.basic_publish(exchange='topic',
@@ -50,5 +53,7 @@ if __name__ == '__main__':
                                   body=to_send)
         elif action.startswith('exit'):
             break
+        else:
+            print('Selected unknown action, try again.')
 
     connection.close()
