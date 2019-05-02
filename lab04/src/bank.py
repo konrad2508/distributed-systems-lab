@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 
 import grpc
@@ -12,7 +11,8 @@ def run():
         stub = currency_pb2_grpc.CurrencySubscriptionStub(channel)
 
         prices = stub.Subscribe(
-            currency_pb2.SubscribeRequest(currencies=[currency_pb2.Currency.Value('PLN'), currency_pb2.Currency.Value('USD')])
+            currency_pb2.SubscribeRequest(
+                currencies=[currency_pb2.Currency.Value('PLN'), currency_pb2.Currency.Value('USD')])
         )
         while True:
             curr = prices.next()
@@ -21,5 +21,5 @@ def run():
             print()
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     run()

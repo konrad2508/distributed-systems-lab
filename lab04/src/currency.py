@@ -7,29 +7,10 @@ from threading import RLock, Condition, Thread
 import currency_pb2
 import currency_pb2_grpc
 
+_SECONDS_IN_DAY = 60 * 60 * 24
 
-class ObservableCurrencyTable(object):
-    def __init__(self, currencies):
-        self.observers = set()
-
-        self.currency_table = {}
-        for currency in currencies:
-            self.currency_table[currency] = round(random.uniform(1, 6), 2)
-
-    def get(self, key):
-        return self.currency_table[key]
-
-    def register(self, who):
-        self.observers.add(who)
-
-    def unregister(self, who):
-        self.observers.discard(who)
-
-    def publish(self, currency, new_value):
-        self.currency_table[currency] = new_value
-
-        for observer in self.observers:
-            observer.update(currency, new_value)
+currency_table = {}
+recent_changes = []
 
 
 class CurrencySubscription(currency_pb2_grpc.CurrencySubscriptionServicer):
@@ -47,7 +28,13 @@ class CurrencySubscription(currency_pb2_grpc.CurrencySubscriptionServicer):
                         yield currency_pb2.SubscribeResponse(currency=curr, value=currency_table.get(curr))
 
 
-def serve():
+def init():
+    available_currencies = currency_pb2.Currency.values()
+    for currency in available_currencies:
+        currency_table[currency] = round(random.uniform(1, 6), 2)
+
+
+def start_server():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     currency_pb2_grpc.add_CurrencySubscriptionServicer_to_server(
         CurrencySubscription(), server)
@@ -55,21 +42,12 @@ def serve():
     server.start()
     try:
         while True:
-            time.sleep(3600 * 24)
+            time.sleep(_SECONDS_IN_DAY)
     except KeyboardInterrupt:
         server.stop(0)
 
 
-currency_table = {}
-recent_changes = []
-
-def init():
-    available_currencies = currency_pb2.Currency.values()
-    for currency in available_currencies:
-        currency_table[currency] = round(random.uniform(1, 6), 2)
-
-
-def change():
+def change_values():
     while True:
         time.sleep(5)
 
@@ -87,7 +65,7 @@ def change():
 if __name__ == '__main__':
     lock = RLock()
     condition = Condition(lock)
-
     init()
-    Thread(target=serve).start()
-    change()
+
+    Thread(target=start_server).start()
+    change_values()
