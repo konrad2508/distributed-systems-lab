@@ -11,6 +11,11 @@ import Bank
 currency_table = {}
 
 
+class AccountI(Bank.Account):
+    def getAccountData(self, current=None):
+        return Bank.AccountData(Bank.AccountType.Standard, 500)
+
+
 def start_currency_client(requested_currencies):
     with grpc.insecure_channel('localhost:50051') as channel:
         stub = currency_pb2_grpc.CurrencySubscriptionStub(channel)
@@ -31,9 +36,8 @@ def start_currency_client(requested_currencies):
 
 def ice_run():
     with Ice.initialize(sys.argv) as communicator:
-        adapter = communicator.createObjectAdapterWithEndpoints("SimplePrinterAdapter", "default -p 10000")
-        object = PrinterI()
-        adapter.add(object, communicator.stringToIdentity("SimplePrinter"))
+        adapter = communicator.createObjectAdapterWithEndpoints("Bank", "tcp -h localhost -p 10000")
+        adapter.add(AccountI(), Ice.stringToIdentity("bank"))
         adapter.activate()
         communicator.waitForShutdown()
 
@@ -41,4 +45,4 @@ def ice_run():
 if __name__ == '__main__':
     currencies = map(str.upper, sys.argv[1:])
     Thread(target=start_currency_client, args=[currencies]).start()
-    # ice_run()
+    ice_run()

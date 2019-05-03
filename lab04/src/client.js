@@ -1,5 +1,5 @@
 const {Ice} = require("ice");
-const {Demo} = require("../slices/Printer");
+const {Bank} = require("./Bank");
 
 (async function()
 {
@@ -7,11 +7,12 @@ const {Demo} = require("../slices/Printer");
     try
     {
         communicator = Ice.initialize();
-        const base = communicator.stringToProxy("SimplePrinter:default -p 10000");
-        const printer = await Demo.PrinterPrx.checkedCast(base);
-        if(printer)
+        const base = communicator.stringToProxy("bank:tcp -h localhost -p 10000");
+        const bank = await Bank.AccountPrx.checkedCast(base);
+        if(bank)
         {
-            await printer.printString("Hello World!");
+            let ret = await bank.getAccountData();
+            console.log(ret)
         }
         else
         {
