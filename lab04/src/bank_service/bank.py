@@ -112,7 +112,7 @@ class AccountManagementI(Bank.AccountManagement):
     def logout(self, proxy, current=None):
         identity = proxy.ice_getIdentity()
 
-        adapter.remove(identity)
+        current.adapter.remove(identity)
 
 ######################################
 # server and client methods
@@ -139,7 +139,6 @@ def start_currency_client(requested_currencies):
 
 def start_bank_server():
     with Ice.initialize(sys.argv) as communicator:
-        global adapter
         adapter = communicator.createObjectAdapterWithEndpoints("Bank", "tcp -h localhost -p 10000")
 
         adapter.add(AccountManagementI(), Ice.stringToIdentity("management"))
@@ -154,7 +153,6 @@ def start_bank_server():
 
 currency_table = {}
 account_table = []
-adapter = None
 
 if __name__ == '__main__':
     currencies = map(str.upper, sys.argv[1:])
