@@ -253,6 +253,13 @@ const mainChoice = async () => {
                 choice = answer.selected;
             });
         if (choice === 'Log out'){
+            account = null;
+            credentials = null;
+
+            console.log();
+            console.log('Logged out successfully');
+            console.log();
+            await mainChoice();
             return;
         } else if (choice === 'Get info'){
             await getAccountData();
