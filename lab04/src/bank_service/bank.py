@@ -22,10 +22,10 @@ class PremiumAccountI(Bank.PremiumAccount, AccountI):
 
 
 class AccountManagementI(Bank.AccountManagement):
-    def register(self, clientData):
+    def register(self, clientData, current=None):
         pass
 
-    def login(self, id, password):
+    def login(self, id, password, current=None):
         pass
 
 
