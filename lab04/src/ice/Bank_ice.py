@@ -70,8 +70,8 @@ if 'Currency' not in _M_Bank.__dict__:
 if 'AccountException' not in _M_Bank.__dict__:
     _M_Bank.AccountException = Ice.createTempClass()
     class AccountException(Ice.UserException):
-        def __init__(self):
-            pass
+        def __init__(self, message=''):
+            self.message = message
 
         def __str__(self):
             return IcePy.stringifyException(self)
@@ -80,7 +80,7 @@ if 'AccountException' not in _M_Bank.__dict__:
 
         _ice_id = '::Bank::AccountException'
 
-    _M_Bank._t_AccountException = IcePy.defineException('::Bank::AccountException', AccountException, (), False, None, ())
+    _M_Bank._t_AccountException = IcePy.defineException('::Bank::AccountException', AccountException, (), False, None, (('message', (), IcePy._t_string, False, 0),))
     AccountException._ice_type = _M_Bank._t_AccountException
 
     _M_Bank.AccountException = AccountException
@@ -89,8 +89,8 @@ if 'AccountException' not in _M_Bank.__dict__:
 if 'CurrencyException' not in _M_Bank.__dict__:
     _M_Bank.CurrencyException = Ice.createTempClass()
     class CurrencyException(Ice.UserException):
-        def __init__(self):
-            pass
+        def __init__(self, message=''):
+            self.message = message
 
         def __str__(self):
             return IcePy.stringifyException(self)
@@ -99,7 +99,7 @@ if 'CurrencyException' not in _M_Bank.__dict__:
 
         _ice_id = '::Bank::CurrencyException'
 
-    _M_Bank._t_CurrencyException = IcePy.defineException('::Bank::CurrencyException', CurrencyException, (), False, None, ())
+    _M_Bank._t_CurrencyException = IcePy.defineException('::Bank::CurrencyException', CurrencyException, (), False, None, (('message', (), IcePy._t_string, False, 0),))
     CurrencyException._ice_type = _M_Bank._t_CurrencyException
 
     _M_Bank.CurrencyException = CurrencyException

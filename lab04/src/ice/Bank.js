@@ -32,9 +32,10 @@
 
     Bank.AccountException = class extends Ice.UserException
     {
-        constructor(_cause = "")
+        constructor(message = "", _cause = "")
         {
             super(_cause);
+            this.message = message;
         }
 
         static get _parent()
@@ -51,13 +52,24 @@
         {
             return Bank.AccountException;
         }
+
+        _writeMemberImpl(ostr)
+        {
+            ostr.writeString(this.message);
+        }
+
+        _readMemberImpl(istr)
+        {
+            this.message = istr.readString();
+        }
     };
 
     Bank.CurrencyException = class extends Ice.UserException
     {
-        constructor(_cause = "")
+        constructor(message = "", _cause = "")
         {
             super(_cause);
+            this.message = message;
         }
 
         static get _parent()
@@ -73,6 +85,16 @@
         _mostDerivedType()
         {
             return Bank.CurrencyException;
+        }
+
+        _writeMemberImpl(ostr)
+        {
+            ostr.writeString(this.message);
+        }
+
+        _readMemberImpl(istr)
+        {
+            this.message = istr.readString();
         }
     };
 

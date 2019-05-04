@@ -4,9 +4,13 @@ module Bank{
 
     enum Currency { USD, EUR, GBP, PLN }
 
-    exception AccountException{};
+    exception AccountException{
+        string message;
+    };
 
-    exception CurrencyException{};
+    exception CurrencyException{
+        string message;
+    };
 
     struct ClientData{
         string name;
