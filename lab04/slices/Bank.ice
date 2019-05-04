@@ -4,13 +4,9 @@ module Bank{
 
     enum Currency { USD, EUR, GBP, PLN }
 
-    exception AccountException{
-        string message;
-    };
+    exception AccountException{};
 
-    exception CurrencyException{
-        string message;
-    };
+    exception CurrencyException{};
 
     struct ClientData{
         string name;
@@ -38,7 +34,7 @@ module Bank{
     };
 
     interface AccountManagement{
-        string register(ClientData clientData) throws AccountException;
+        RegistrationInfo register(ClientData clientData) throws AccountException;
         Account* login(string id, string password) throws AccountException;
     };
 
