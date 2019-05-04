@@ -16,12 +16,12 @@ module Bank{
         string name;
         string surname;
         string id;
-        int income;
+        double income;
     };
 
     struct AccountData{
         AccountType accountType;
-        int funds;
+        double funds;
     };
 
     struct RegistrationInfo{
@@ -34,7 +34,7 @@ module Bank{
     };
 
     interface PremiumAccount extends Account{
-        bool getLoan(double amount, Currency currency) throws CurrencyException;
+        double getLoan(double amount, string currency) throws CurrencyException;
     };
 
     interface AccountManagement{

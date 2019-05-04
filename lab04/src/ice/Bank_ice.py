@@ -108,101 +108,30 @@ if 'CurrencyException' not in _M_Bank.__dict__:
 if 'ClientData' not in _M_Bank.__dict__:
     _M_Bank.ClientData = Ice.createTempClass()
     class ClientData(object):
-        def __init__(self, name='', surname='', id='', income=0):
+        def __init__(self, name='', surname='', id='', income=0.0):
             self.name = name
             self.surname = surname
             self.id = id
             self.income = income
 
-        def __hash__(self):
-            _h = 0
-            _h = 5 * _h + Ice.getHash(self.name)
-            _h = 5 * _h + Ice.getHash(self.surname)
-            _h = 5 * _h + Ice.getHash(self.id)
-            _h = 5 * _h + Ice.getHash(self.income)
-            return _h % 0x7fffffff
-
-        def __compare(self, other):
+        def __eq__(self, other):
             if other is None:
-                return 1
+                return False
             elif not isinstance(other, _M_Bank.ClientData):
                 return NotImplemented
             else:
-                if self.name is None or other.name is None:
-                    if self.name != other.name:
-                        return (-1 if self.name is None else 1)
-                else:
-                    if self.name < other.name:
-                        return -1
-                    elif self.name > other.name:
-                        return 1
-                if self.surname is None or other.surname is None:
-                    if self.surname != other.surname:
-                        return (-1 if self.surname is None else 1)
-                else:
-                    if self.surname < other.surname:
-                        return -1
-                    elif self.surname > other.surname:
-                        return 1
-                if self.id is None or other.id is None:
-                    if self.id != other.id:
-                        return (-1 if self.id is None else 1)
-                else:
-                    if self.id < other.id:
-                        return -1
-                    elif self.id > other.id:
-                        return 1
-                if self.income is None or other.income is None:
-                    if self.income != other.income:
-                        return (-1 if self.income is None else 1)
-                else:
-                    if self.income < other.income:
-                        return -1
-                    elif self.income > other.income:
-                        return 1
-                return 0
-
-        def __lt__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r < 0
-
-        def __le__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r <= 0
-
-        def __gt__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r > 0
-
-        def __ge__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r >= 0
-
-        def __eq__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r == 0
+                if self.name != other.name:
+                    return False
+                if self.surname != other.surname:
+                    return False
+                if self.id != other.id:
+                    return False
+                if self.income != other.income:
+                    return False
+                return True
 
         def __ne__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r != 0
+            return not self.__eq__(other)
 
         def __str__(self):
             return IcePy.stringify(self, _M_Bank._t_ClientData)
@@ -213,7 +142,7 @@ if 'ClientData' not in _M_Bank.__dict__:
         ('name', (), IcePy._t_string),
         ('surname', (), IcePy._t_string),
         ('id', (), IcePy._t_string),
-        ('income', (), IcePy._t_int)
+        ('income', (), IcePy._t_double)
     ))
 
     _M_Bank.ClientData = ClientData
@@ -222,81 +151,24 @@ if 'ClientData' not in _M_Bank.__dict__:
 if 'AccountData' not in _M_Bank.__dict__:
     _M_Bank.AccountData = Ice.createTempClass()
     class AccountData(object):
-        def __init__(self, accountType=_M_Bank.AccountType.Standard, funds=0):
+        def __init__(self, accountType=_M_Bank.AccountType.Standard, funds=0.0):
             self.accountType = accountType
             self.funds = funds
 
-        def __hash__(self):
-            _h = 0
-            _h = 5 * _h + Ice.getHash(self.accountType)
-            _h = 5 * _h + Ice.getHash(self.funds)
-            return _h % 0x7fffffff
-
-        def __compare(self, other):
+        def __eq__(self, other):
             if other is None:
-                return 1
+                return False
             elif not isinstance(other, _M_Bank.AccountData):
                 return NotImplemented
             else:
-                if self.accountType is None or other.accountType is None:
-                    if self.accountType != other.accountType:
-                        return (-1 if self.accountType is None else 1)
-                else:
-                    if self.accountType < other.accountType:
-                        return -1
-                    elif self.accountType > other.accountType:
-                        return 1
-                if self.funds is None or other.funds is None:
-                    if self.funds != other.funds:
-                        return (-1 if self.funds is None else 1)
-                else:
-                    if self.funds < other.funds:
-                        return -1
-                    elif self.funds > other.funds:
-                        return 1
-                return 0
-
-        def __lt__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r < 0
-
-        def __le__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r <= 0
-
-        def __gt__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r > 0
-
-        def __ge__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r >= 0
-
-        def __eq__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r == 0
+                if self.accountType != other.accountType:
+                    return False
+                if self.funds != other.funds:
+                    return False
+                return True
 
         def __ne__(self, other):
-            r = self.__compare(other)
-            if r is NotImplemented:
-                return r
-            else:
-                return r != 0
+            return not self.__eq__(other)
 
         def __str__(self):
             return IcePy.stringify(self, _M_Bank._t_AccountData)
@@ -305,7 +177,7 @@ if 'AccountData' not in _M_Bank.__dict__:
 
     _M_Bank._t_AccountData = IcePy.defineStruct('::Bank::AccountData', AccountData, (), (
         ('accountType', (), _M_Bank._t_AccountType),
-        ('funds', (), IcePy._t_int)
+        ('funds', (), IcePy._t_double)
     ))
 
     _M_Bank.AccountData = AccountData
@@ -524,7 +396,7 @@ if 'PremiumAccountPrx' not in _M_Bank.__dict__:
     _M_Bank._t_PremiumAccountDisp = IcePy.defineClass('::Bank::PremiumAccount', PremiumAccount, (), None, (_M_Bank._t_AccountDisp,))
     PremiumAccount._ice_type = _M_Bank._t_PremiumAccountDisp
 
-    PremiumAccount._op_getLoan = IcePy.Operation('getLoan', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), IcePy._t_double, False, 0), ((), _M_Bank._t_Currency, False, 0)), (), ((), IcePy._t_bool, False, 0), (_M_Bank._t_CurrencyException,))
+    PremiumAccount._op_getLoan = IcePy.Operation('getLoan', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), IcePy._t_double, False, 0), ((), IcePy._t_string, False, 0)), (), ((), IcePy._t_double, False, 0), (_M_Bank._t_CurrencyException,))
 
     _M_Bank.PremiumAccount = PremiumAccount
     del PremiumAccount

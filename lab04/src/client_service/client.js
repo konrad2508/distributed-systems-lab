@@ -1,23 +1,264 @@
 const {Ice} = require("ice/src/index");
 const {Bank} = require("../ice/Bank");
+const inquirer = require("inquirer");
 
-(async function () {
-    let communicator;
+let communicator;
+let base;
+let bank;
+let account;
+
+const getPort = async () => {
+    let port;
+    await inquirer
+        .prompt([
+            {
+                type: 'text',
+                message: 'Enter bank port',
+                name: 'port',
+                validate: (value) => {
+                    if (/^\d+$/.test(value)) return true;
+                    else return 'Port must contain only digits';
+                }
+            }
+        ])
+        .then(answer => {
+            port = answer.port;
+        });
+    return port;
+};
+
+const connect = async (port) => {
+    communicator = Ice.initialize();
+    base = communicator.stringToProxy(`management:tcp -h localhost -p ${port}`);
+    bank = await Bank.AccountManagementPrx.checkedCast(base);
+};
+
+const logInToBank = async () => {
+    let login;
+    let password;
+    await inquirer
+        .prompt([
+            {
+                type: 'text',
+                message: 'Enter login',
+                name: 'login'
+            },
+            {
+                type: 'password',
+                message: 'Enter password',
+                name: 'password',
+                mask: '*'
+            }
+        ])
+        .then(answer => {
+            login = answer.login;
+            password = answer.password;
+        });
+    account = await bank.login(login, password);
+    if (await account.ice_isA('::Bank::PremiumAccount')){
+        account = await Bank.PremiumAccountPrx.checkedCast(account);
+    }
+};
+
+const registerAnAccount = async () => {
+    let name;
+    let surname;
+    let id;
+    let income;
+    await inquirer
+        .prompt([
+            {
+                type: 'text',
+                message: 'Enter your name',
+                name: 'name'
+            },
+            {
+                type: 'text',
+                message: 'Enter your surname',
+                name: 'surname'
+            },
+            {
+                type: 'text',
+                message: 'Enter your PESEL (this will be used as a login)',
+                name: 'id'
+            },
+            {
+                type: 'number',
+                message: 'Enter your monthly income',
+                name: 'income',
+                validate: (value) => {
+                    if (/([0-9]*[.])?[0-9]+/.test(value)) return true;
+                    else return 'Enter a valid income';
+                }
+            }
+        ])
+        .then(answer => {
+            name = answer.name;
+            surname = answer.surname;
+            id = answer.id;
+            income = answer.income;
+        });
+    let data = new Bank.ClientData(name, surname, id, income);
+    let accountCreationData = await bank.register(data);
+
+    console.log();
+    console.log('Successfully created an account.');
+    console.log(`Your account type is: ${accountCreationData.accountType}`);
+    console.log(`Your password is: ${accountCreationData.password}`);
+    console.log();
+};
+
+const getAccountData = async () => {
+    let accountData = await account.getAccountData();
+    console.log();
+    console.log(`Your account type: ${accountData.accountType}`);
+    console.log(`Available funds: ${accountData.funds}`);
+    console.log();
+};
+
+const getLoan = async () => {
+    if (! await account.ice_isA("::Bank::PremiumAccount")){
+        console.log();
+        console.log('Your account does not support loans!');
+        console.log();
+        return;
+    }
+    let amount;
+    let currency;
+    let loan_length;
+
+    await inquirer
+        .prompt([
+            {
+                type: 'text',
+                message: 'Enter currency',
+                name: 'currency'
+            },
+            {
+                type: 'number',
+                message: 'Enter amount',
+                name: 'amount',
+                validate: (value) => {
+                    if (/([0-9]*[.])?[0-9]+/.test(value)) return true;
+                    else return 'Enter a number';
+                }
+            },
+            {
+                type: 'number',
+                message: 'Enter loan length in days',
+                name: 'loan_length',
+                validate: (value) => {
+                    if (/^\d+$/.test(value)) return true;
+                    else return 'Number of days must be made of only digits';
+                }
+            }
+        ])
+        .then(answer => {
+            amount = answer.amount;
+            currency = answer.currency;
+            loan_length = answer.loan_length;
+        });
     try {
-        communicator = Ice.initialize();
-        const base = communicator.stringToProxy("management:tcp -h localhost -p 10000");
-        const bank = await Bank.AccountManagementPrx.checkedCast(base);
+        let loan = await account.getLoan(amount, currency);
+        console.log();
+        if (loan > 0) {
+            console.log(`Loan attained successfully. You got: ${loan}`);
+        } else {
+            console.log(`Loan did not get attained`);
+        }
+        console.log();
+    } catch (ex){
+        console.log();
+        console.log(ex.message);
+        console.log();
+    }
+};
+
+const mainChoice = async () => {
+    while (true) {
+        let choice;
+        await inquirer
+            .prompt([
+                {
+                    type: 'list',
+                    message: 'Select action',
+                    name: 'selected',
+                    choices: [
+                        'Log in',
+                        'Register',
+                        'Exit'
+                    ]
+                }
+            ])
+            .then(answer => {
+                choice = answer.selected;
+            });
+        if (choice === 'Exit') {
+            return;
+        } else if (choice === 'Log in') {
+            while (true) {
+                try {
+                    await logInToBank();
+                    break;
+                } catch (ex) {
+                    console.log();
+                    console.log(ex.message);
+                    console.log();
+                }
+            }
+            break;
+        } else if (choice === 'Register') {
+            while (true) {
+                try {
+                    await registerAnAccount();
+                    break;
+                } catch (ex) {
+                    console.log();
+                    console.log(ex.message);
+                    console.log();
+                }
+            }
+        }
+    }
+    while(true){
+        let choice;
+        await inquirer
+            .prompt([
+                {
+                    type: 'list',
+                    message: 'Select account action',
+                    name: 'selected',
+                    choices: [
+                        'Get info',
+                        'Get loan',
+                        'Log out'
+                    ]
+                }
+            ])
+            .then(answer => {
+                choice = answer.selected;
+            });
+        if (choice === 'Log out'){
+            return;
+        } else if (choice === 'Get info'){
+            await getAccountData();
+        } else if (choice === 'Get loan'){
+            await getLoan();
+        }
+    }
+};
+
+// main
+(async function () {
+    try {
+        console.clear();
+
+        let port = await getPort();
+
+        await connect(port);
+
         if (bank) {
-            let data = new Bank.ClientData("user", "userable", "11223344", 1200);
-            let accountCreationData = await bank.register(data);
-
-            let account = await bank.login("11223344", accountCreationData.password);
-
-            let ret2 = await account.getAccountData();
-
-            console.log('yatta!');
-            console.log(ret2);
-
+            await mainChoice();
         } else {
             console.log("Invalid proxy");
         }

@@ -24,13 +24,24 @@ class AccountI(Bank.Account):
     def get_pwd(self):
         return self.pwd
 
+    def get_type(self):
+        return self.type
+
     def getAccountData(self, current=None):
         return Bank.AccountData(self.type, self.funds)
 
 
 class PremiumAccountI(Bank.PremiumAccount, AccountI):
     def getLoan(self, amount, currency, current=None):
-        return True
+        currency = str.upper(str(currency))
+
+        if currency not in list(currency_table.keys()):
+            raise Bank.CurrencyException('Bank does not support requested currency!')
+
+        loan = amount * currency_table[currency]
+        self.funds += loan
+
+        return loan
 
 
 class AccountManagementI(Bank.AccountManagement):
@@ -41,7 +52,10 @@ class AccountManagementI(Bank.AccountManagement):
         account_type = Bank.AccountType.Premium if clientData.income >= 1000 else Bank.AccountType.Standard
         account_pwd = 'TriHard 7'
 
-        new_account = AccountI(clientData, account_type, account_pwd)
+        if account_type == Bank.AccountType.Premium:
+            new_account = PremiumAccountI(clientData, account_type, account_pwd)
+        else:
+            new_account = AccountI(clientData, account_type, account_pwd)
         account_table.append(new_account)
 
         return Bank.RegistrationInfo(account_type, account_pwd)
@@ -58,7 +72,10 @@ class AccountManagementI(Bank.AccountManagement):
         if account is None:
             raise Bank.AccountException('Account with that id does not exist!')
 
-        proxy = Bank.PremiumAccountPrx.uncheckedCast(current.adapter.addWithUUID(account))
+        if account.get_type() == Bank.AccountType.Premium:
+            proxy = Bank.PremiumAccountPrx.uncheckedCast(current.adapter.addWithUUID(account))
+        else:
+            proxy = Bank.AccountPrx.uncheckedCast(current.adapter.addWithUUID(account))
 
         return proxy
 
@@ -84,8 +101,6 @@ def start_currency_client(requested_currencies):
             curr_name = currency_pb2.Currency.Name(curr.currency)
             curr_value = curr.value
             currency_table[curr_name] = curr_value
-
-            # print(currency_table)
 
 
 def start_bank_server():

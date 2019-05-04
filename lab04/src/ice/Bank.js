@@ -100,7 +100,7 @@
 
     Bank.ClientData = class
     {
-        constructor(name = "", surname = "", id = "", income = 0)
+        constructor(name = "", surname = "", id = "", income = 0.0)
         {
             this.name = name;
             this.surname = surname;
@@ -113,7 +113,7 @@
             ostr.writeString(this.name);
             ostr.writeString(this.surname);
             ostr.writeString(this.id);
-            ostr.writeInt(this.income);
+            ostr.writeDouble(this.income);
         }
 
         _read(istr)
@@ -121,20 +121,20 @@
             this.name = istr.readString();
             this.surname = istr.readString();
             this.id = istr.readString();
-            this.income = istr.readInt();
+            this.income = istr.readDouble();
         }
 
         static get minWireSize()
         {
-            return  7;
+            return  11;
         }
     };
 
-    Slice.defineStruct(Bank.ClientData, true, true);
+    Slice.defineStruct(Bank.ClientData, false, true);
 
     Bank.AccountData = class
     {
-        constructor(accountType = Bank.AccountType.Standard, funds = 0)
+        constructor(accountType = Bank.AccountType.Standard, funds = 0.0)
         {
             this.accountType = accountType;
             this.funds = funds;
@@ -143,22 +143,22 @@
         _write(ostr)
         {
             Bank.AccountType._write(ostr, this.accountType);
-            ostr.writeInt(this.funds);
+            ostr.writeDouble(this.funds);
         }
 
         _read(istr)
         {
             this.accountType = Bank.AccountType._read(istr);
-            this.funds = istr.readInt();
+            this.funds = istr.readDouble();
         }
 
         static get minWireSize()
         {
-            return  5;
+            return  9;
         }
     };
 
-    Slice.defineStruct(Bank.AccountData, true, true);
+    Slice.defineStruct(Bank.AccountData, false, true);
 
     Bank.RegistrationInfo = class
     {
@@ -233,7 +233,7 @@
 
     Slice.defineOperations(Bank.PremiumAccount, Bank.PremiumAccountPrx, iceC_Bank_PremiumAccount_ids, 1,
     {
-        "getLoan": [, , , , [1], [[6], [Bank.Currency._helper]], ,
+        "getLoan": [, , , , [6], [[6], [7]], ,
         [
             Bank.CurrencyException
         ], , ]
