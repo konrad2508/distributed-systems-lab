@@ -334,7 +334,7 @@ if 'AccountPrx' not in _M_Bank.__dict__:
     _M_Bank._t_AccountDisp = IcePy.defineClass('::Bank::Account', Account, (), None, ())
     Account._ice_type = _M_Bank._t_AccountDisp
 
-    Account._op_getAccountData = IcePy.Operation('getAccountData', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (), (), ((), _M_Bank._t_AccountData, False, 0), ())
+    Account._op_getAccountData = IcePy.Operation('getAccountData', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (), (), ((), _M_Bank._t_AccountData, False, 0), (_M_Bank._t_AccountException,))
 
     _M_Bank.Account = Account
     del Account
@@ -397,7 +397,7 @@ if 'PremiumAccountPrx' not in _M_Bank.__dict__:
     _M_Bank._t_PremiumAccountDisp = IcePy.defineClass('::Bank::PremiumAccount', PremiumAccount, (), None, (_M_Bank._t_AccountDisp,))
     PremiumAccount._ice_type = _M_Bank._t_PremiumAccountDisp
 
-    PremiumAccount._op_getLoan = IcePy.Operation('getLoan', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), IcePy._t_double, False, 0), ((), IcePy._t_string, False, 0), ((), IcePy._t_int, False, 0)), (), ((), IcePy._t_double, False, 0), (_M_Bank._t_CurrencyException,))
+    PremiumAccount._op_getLoan = IcePy.Operation('getLoan', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), IcePy._t_double, False, 0), ((), IcePy._t_string, False, 0), ((), IcePy._t_int, False, 0)), (), ((), IcePy._t_double, False, 0), (_M_Bank._t_CurrencyException, _M_Bank._t_AccountException))
 
     _M_Bank.PremiumAccount = PremiumAccount
     del PremiumAccount
@@ -420,14 +420,14 @@ if 'AccountManagementPrx' not in _M_Bank.__dict__:
         def end_register(self, _r):
             return _M_Bank.AccountManagement._op_register.end(self, _r)
 
-        def login(self, id, password, context=None):
-            return _M_Bank.AccountManagement._op_login.invoke(self, ((id, password), context))
+        def login(self, context=None):
+            return _M_Bank.AccountManagement._op_login.invoke(self, ((), context))
 
-        def loginAsync(self, id, password, context=None):
-            return _M_Bank.AccountManagement._op_login.invokeAsync(self, ((id, password), context))
+        def loginAsync(self, context=None):
+            return _M_Bank.AccountManagement._op_login.invokeAsync(self, ((), context))
 
-        def begin_login(self, id, password, _response=None, _ex=None, _sent=None, context=None):
-            return _M_Bank.AccountManagement._op_login.begin(self, ((id, password), _response, _ex, _sent, context))
+        def begin_login(self, _response=None, _ex=None, _sent=None, context=None):
+            return _M_Bank.AccountManagement._op_login.begin(self, ((), _response, _ex, _sent, context))
 
         def end_login(self, _r):
             return _M_Bank.AccountManagement._op_login.end(self, _r)
@@ -464,7 +464,7 @@ if 'AccountManagementPrx' not in _M_Bank.__dict__:
         def register(self, clientData, current=None):
             raise NotImplementedError("servant method 'register' not implemented")
 
-        def login(self, id, password, current=None):
+        def login(self, current=None):
             raise NotImplementedError("servant method 'login' not implemented")
 
         def __str__(self):
@@ -476,7 +476,7 @@ if 'AccountManagementPrx' not in _M_Bank.__dict__:
     AccountManagement._ice_type = _M_Bank._t_AccountManagementDisp
 
     AccountManagement._op_register = IcePy.Operation('register', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), _M_Bank._t_ClientData, False, 0),), (), ((), _M_Bank._t_RegistrationInfo, False, 0), (_M_Bank._t_AccountException,))
-    AccountManagement._op_login = IcePy.Operation('login', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), IcePy._t_string, False, 0), ((), IcePy._t_string, False, 0)), (), ((), _M_Bank._t_AccountPrx, False, 0), (_M_Bank._t_AccountException,))
+    AccountManagement._op_login = IcePy.Operation('login', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (), (), ((), _M_Bank._t_AccountPrx, False, 0), (_M_Bank._t_AccountException,))
 
     _M_Bank.AccountManagement = AccountManagement
     del AccountManagement

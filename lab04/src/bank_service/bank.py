@@ -28,6 +28,9 @@ class AccountI(Bank.Account):
         return self.type
 
     def getAccountData(self, current=None):
+        if not current.ctx or current.ctx['id'] != self.get_id() or current.ctx['pwd'] != self.get_pwd():
+            raise Bank.AccountException('Invalid credentials!')
+
         return Bank.AccountData(self.type, self.funds)
 
 
@@ -37,6 +40,9 @@ class PremiumAccountI(Bank.PremiumAccount, AccountI):
         self.loan_history = []
 
     def getLoan(self, amount, currency, length, current=None):
+        if not current.ctx or current.ctx['id'] != self.get_id() or current.ctx['pwd'] != self.get_pwd():
+            raise Bank.AccountException('Invalid credentials!')
+
         currency = str.upper(str(currency))
 
         if currency not in list(currency_table.keys()):
@@ -54,6 +60,9 @@ class PremiumAccountI(Bank.PremiumAccount, AccountI):
         return loan
 
     def getAccountData(self, current=None):
+        if not current.ctx or current.ctx['id'] != self.get_id() or current.ctx['pwd'] != self.get_pwd():
+            raise Bank.AccountException('Invalid credentials!')
+
         return Bank.AccountData(self.type, self.funds, loans=self.loan_history)
 
 
@@ -73,11 +82,17 @@ class AccountManagementI(Bank.AccountManagement):
 
         return Bank.RegistrationInfo(account_type, account_pwd)
 
-    def login(self, id, password, current=None):
+    def login(self, current=None):
+        if not current.ctx:
+            raise Bank.AccountException('Specify login and password!')
+
+        id = current.ctx['id']
+        pwd = current.ctx['pwd']
+
         account = None
         for acc in account_table:
             if acc.get_id() == id:
-                if acc.get_pwd() == password:
+                if acc.get_pwd() == pwd:
                     account = acc
                 else:
                     raise Bank.AccountException('Invalid password!')
@@ -120,8 +135,6 @@ def start_bank_server():
     with Ice.initialize(sys.argv) as communicator:
         adapter = communicator.createObjectAdapterWithEndpoints("Bank", "tcp -h localhost -p 10000")
 
-        # adapter.add(AccountI(), Ice.stringToIdentity("standard"))
-        # adapter.add(PremiumAccountI(), Ice.stringToIdentity("premium"))
         adapter.add(AccountManagementI(), Ice.stringToIdentity("management"))
 
         adapter.activate()

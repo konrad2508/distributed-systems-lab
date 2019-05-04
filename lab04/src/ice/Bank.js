@@ -211,7 +211,10 @@
 
     Slice.defineOperations(Bank.Account, Bank.AccountPrx, iceC_Bank_Account_ids, 0,
     {
-        "getAccountData": [, , , , ["Bank.AccountData", true], , , , , true]
+        "getAccountData": [, , , , ["Bank.AccountData", true], , ,
+        [
+            Bank.AccountException
+        ], , true]
     });
 
     const iceC_Bank_PremiumAccount_ids = [
@@ -243,6 +246,7 @@
     {
         "getLoan": [, , , , [6], [[6], [7], [3]], ,
         [
+            Bank.AccountException,
             Bank.CurrencyException
         ], , ]
     });
@@ -266,7 +270,7 @@
         [
             Bank.AccountException
         ], , ],
-        "login": [, , , , ["Bank.AccountPrx"], [[7], [7]], ,
+        "login": [, , , , ["Bank.AccountPrx"], , ,
         [
             Bank.AccountException
         ], , ]

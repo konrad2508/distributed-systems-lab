@@ -34,16 +34,16 @@ module Bank{
     }
 
     interface Account{
-        AccountData getAccountData();
+        AccountData getAccountData() throws AccountException;
     };
 
     interface PremiumAccount extends Account{
-        double getLoan(double amount, string currency, int length) throws CurrencyException;
+        double getLoan(double amount, string currency, int length) throws CurrencyException, AccountException;
     };
 
     interface AccountManagement{
         RegistrationInfo register(ClientData clientData) throws AccountException;
-        Account* login(string id, string password) throws AccountException;
+        Account* login() throws AccountException;
     };
 
 };

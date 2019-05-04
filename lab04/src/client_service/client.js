@@ -7,6 +7,15 @@ let base;
 let bank;
 let account;
 
+let credentials;
+
+const createCredentials = (login, password) => {
+    let map = new Map();
+    map.set('id', login);
+    map.set('pwd', password);
+    return map;
+};
+
 const getPort = async () => {
     let port;
     await inquirer
@@ -34,8 +43,6 @@ const connect = async (port) => {
 };
 
 const logInToBank = async () => {
-    let login;
-    let password;
     await inquirer
         .prompt([
             {
@@ -54,7 +61,8 @@ const logInToBank = async () => {
             login = answer.login;
             password = answer.password;
         });
-    account = await bank.login(login, password);
+    credentials = createCredentials(login, password);
+    account = await bank.login(context=credentials);
     if (await account.ice_isA('::Bank::PremiumAccount')){
         account = await Bank.PremiumAccountPrx.checkedCast(account);
     }
@@ -109,7 +117,7 @@ const registerAnAccount = async () => {
 };
 
 const getAccountData = async () => {
-    let accountData = await account.getAccountData();
+    let accountData = await account.getAccountData(context=credentials);
     console.log();
     console.log(`Your account type: ${accountData.accountType}`);
     console.log(`Available funds: ${accountData.funds}`);
@@ -165,7 +173,7 @@ const getLoan = async () => {
             loan_length = answer.loan_length;
         });
     try {
-        let loan = await account.getLoan(amount, currency, loan_length);
+        let loan = await account.getLoan(amount, currency, loan_length, context=credentials);
         console.log();
         if (loan > 0) {
             console.log(`Loan attained successfully. You got: ${loan}`);
