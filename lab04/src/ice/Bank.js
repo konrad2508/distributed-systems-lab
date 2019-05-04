@@ -32,10 +32,10 @@
 
     Bank.AccountException = class extends Ice.UserException
     {
-        constructor(message = "", _cause = "")
+        constructor(reason = "", _cause = "")
         {
             super(_cause);
-            this.message = message;
+            this.reason = reason;
         }
 
         static get _parent()
@@ -55,21 +55,21 @@
 
         _writeMemberImpl(ostr)
         {
-            ostr.writeString(this.message);
+            ostr.writeString(this.reason);
         }
 
         _readMemberImpl(istr)
         {
-            this.message = istr.readString();
+            this.reason = istr.readString();
         }
     };
 
     Bank.CurrencyException = class extends Ice.UserException
     {
-        constructor(message = "", _cause = "")
+        constructor(reason = "", _cause = "")
         {
             super(_cause);
-            this.message = message;
+            this.reason = reason;
         }
 
         static get _parent()
@@ -89,12 +89,12 @@
 
         _writeMemberImpl(ostr)
         {
-            ostr.writeString(this.message);
+            ostr.writeString(this.reason);
         }
 
         _readMemberImpl(istr)
         {
-            this.message = istr.readString();
+            this.reason = istr.readString();
         }
     };
 
@@ -273,7 +273,8 @@
         "login": [, , , , ["Bank.AccountPrx"], , ,
         [
             Bank.AccountException
-        ], , ]
+        ], , ],
+        "logout": [, , , , , [["Bank.AccountPrx"]], , , , ]
     });
     exports.Bank = Bank;
 }

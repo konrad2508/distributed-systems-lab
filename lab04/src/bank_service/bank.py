@@ -101,12 +101,18 @@ class AccountManagementI(Bank.AccountManagement):
             raise Bank.AccountException('Account with that id does not exist!')
 
         if account.get_type() == Bank.AccountType.Premium:
-            proxy = Bank.PremiumAccountPrx.uncheckedCast(current.adapter.addWithUUID(account))
+            identity = Ice.stringToIdentity("%s/%s" % ('premium', id))
+            proxy = Bank.PremiumAccountPrx.uncheckedCast(current.adapter.add(account, identity))
         else:
-            proxy = Bank.AccountPrx.uncheckedCast(current.adapter.addWithUUID(account))
+            identity = Ice.stringToIdentity("%s/%s" % ('standard', id))
+            proxy = Bank.AccountPrx.uncheckedCast(current.adapter.add(account, identity))
 
         return proxy
 
+    def logout(self, proxy, current=None):
+        identity = proxy.ice_getIdentity()
+
+        adapter.remove(identity)
 
 ######################################
 # server and client methods
@@ -133,6 +139,7 @@ def start_currency_client(requested_currencies):
 
 def start_bank_server():
     with Ice.initialize(sys.argv) as communicator:
+        global adapter
         adapter = communicator.createObjectAdapterWithEndpoints("Bank", "tcp -h localhost -p 10000")
 
         adapter.add(AccountManagementI(), Ice.stringToIdentity("management"))
@@ -147,6 +154,7 @@ def start_bank_server():
 
 currency_table = {}
 account_table = []
+adapter = None
 
 if __name__ == '__main__':
     currencies = map(str.upper, sys.argv[1:])

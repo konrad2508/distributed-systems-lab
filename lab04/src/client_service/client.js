@@ -183,7 +183,7 @@ const getLoan = async () => {
         console.log();
     } catch (ex){
         console.log();
-        console.log(ex);
+        console.log(ex.reason ? ex.reason : 'Something went wrong, try again');
         console.log();
     }
 };
@@ -216,7 +216,7 @@ const mainChoice = async () => {
                     break;
                 } catch (ex) {
                     console.log();
-                    console.log(ex.message);
+                    console.log(ex.reason ? ex.reason : 'Something went wrong, try again');
                     console.log();
                 }
             }
@@ -228,12 +228,13 @@ const mainChoice = async () => {
                     break;
                 } catch (ex) {
                     console.log();
-                    console.log(ex.message);
+                    console.log(ex.reason ? ex.reason : 'Something went wrong, try again');
                     console.log();
                 }
             }
         }
     }
+
     while(true){
         let choice;
         await inquirer
@@ -253,6 +254,7 @@ const mainChoice = async () => {
                 choice = answer.selected;
             });
         if (choice === 'Log out'){
+            await bank.logout(account);
             account = null;
             credentials = null;
 
