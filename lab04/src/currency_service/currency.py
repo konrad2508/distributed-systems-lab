@@ -4,8 +4,7 @@ import random
 from concurrent import futures
 from threading import RLock, Condition, Thread
 
-import currency_pb2
-import currency_pb2_grpc
+from pb2 import currency_pb2, currency_pb2_grpc
 
 _SECONDS_IN_DAY = 60 * 60 * 24
 

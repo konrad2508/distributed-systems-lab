@@ -1,5 +1,5 @@
-const {Ice} = require("ice");
-const {Bank} = require("./Bank");
+const {Ice} = require("ice/src/index");
+const {Bank} = require("../ice/Bank");
 
 (async function() {
     let communicator;

@@ -3,8 +3,7 @@ import grpc
 import Ice
 from threading import Thread
 
-import currency_pb2
-import currency_pb2_grpc
+from pb2 import currency_pb2, currency_pb2_grpc
 import Bank
 
 
@@ -51,6 +50,8 @@ def start_currency_client(requested_currencies):
             curr_name = currency_pb2.Currency.Name(curr.currency)
             curr_value = curr.value
             currency_table[curr_name] = curr_value
+
+            print(currency_table)
 
 
 def start_bank_server():
