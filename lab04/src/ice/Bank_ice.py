@@ -432,18 +432,6 @@ if 'AccountManagementPrx' not in _M_Bank.__dict__:
         def end_login(self, _r):
             return _M_Bank.AccountManagement._op_login.end(self, _r)
 
-        def logout(self, account, context=None):
-            return _M_Bank.AccountManagement._op_logout.invoke(self, ((account, ), context))
-
-        def logoutAsync(self, account, context=None):
-            return _M_Bank.AccountManagement._op_logout.invokeAsync(self, ((account, ), context))
-
-        def begin_logout(self, account, _response=None, _ex=None, _sent=None, context=None):
-            return _M_Bank.AccountManagement._op_logout.begin(self, ((account, ), _response, _ex, _sent, context))
-
-        def end_logout(self, _r):
-            return _M_Bank.AccountManagement._op_logout.end(self, _r)
-
         @staticmethod
         def checkedCast(proxy, facetOrContext=None, context=None):
             return _M_Bank.AccountManagementPrx.ice_checkedCast(proxy, '::Bank::AccountManagement', facetOrContext, context)
@@ -479,9 +467,6 @@ if 'AccountManagementPrx' not in _M_Bank.__dict__:
         def login(self, current=None):
             raise NotImplementedError("servant method 'login' not implemented")
 
-        def logout(self, account, current=None):
-            raise NotImplementedError("servant method 'logout' not implemented")
-
         def __str__(self):
             return IcePy.stringify(self, _M_Bank._t_AccountManagementDisp)
 
@@ -492,7 +477,6 @@ if 'AccountManagementPrx' not in _M_Bank.__dict__:
 
     AccountManagement._op_register = IcePy.Operation('register', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), _M_Bank._t_ClientData, False, 0),), (), ((), _M_Bank._t_RegistrationInfo, False, 0), (_M_Bank._t_AccountException,))
     AccountManagement._op_login = IcePy.Operation('login', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (), (), ((), _M_Bank._t_AccountPrx, False, 0), (_M_Bank._t_AccountException,))
-    AccountManagement._op_logout = IcePy.Operation('logout', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), _M_Bank._t_AccountPrx, False, 0),), (), None, ())
 
     _M_Bank.AccountManagement = AccountManagement
     del AccountManagement

@@ -254,7 +254,6 @@ const mainChoice = async () => {
                 choice = answer.selected;
             });
         if (choice === 'Log out'){
-            await bank.logout(account);
             account = null;
             credentials = null;
 

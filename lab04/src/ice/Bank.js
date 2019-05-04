@@ -273,8 +273,7 @@
         "login": [, , , , ["Bank.AccountPrx"], , ,
         [
             Bank.AccountException
-        ], , ],
-        "logout": [, , , , , [["Bank.AccountPrx"]], , , , ]
+        ], , ]
     });
     exports.Bank = Bank;
 }

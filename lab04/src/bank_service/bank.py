@@ -76,9 +76,21 @@ class AccountManagementI(Bank.AccountManagement):
 
         if account_type == Bank.AccountType.Premium:
             new_account = PremiumAccountI(clientData, account_type, account_pwd)
+
+            identity = Ice.stringToIdentity("%s/%s" % ('premium', clientData.id))
+            proxy = Bank.PremiumAccountPrx.uncheckedCast(current.adapter.add(new_account, identity))
+
         else:
             new_account = AccountI(clientData, account_type, account_pwd)
-        account_table.append(new_account)
+
+            identity = Ice.stringToIdentity("%s/%s" % ('standard', clientData.id))
+            proxy = Bank.AccountPrx.uncheckedCast(current.adapter.add(new_account, identity))
+
+        account_obj = {
+            'account': new_account,
+            'proxy': proxy
+        }
+        account_table.append(account_obj)
 
         return Bank.RegistrationInfo(account_type, account_pwd)
 
@@ -91,28 +103,16 @@ class AccountManagementI(Bank.AccountManagement):
 
         account = None
         for acc in account_table:
-            if acc.get_id() == id:
-                if acc.get_pwd() == pwd:
-                    account = acc
+            if acc['account'].get_id() == id:
+                if acc['account'].get_pwd() == pwd:
+                    account = acc['proxy']
                 else:
                     raise Bank.AccountException('Invalid password!')
 
         if account is None:
             raise Bank.AccountException('Account with that id does not exist!')
 
-        if account.get_type() == Bank.AccountType.Premium:
-            identity = Ice.stringToIdentity("%s/%s" % ('premium', id))
-            proxy = Bank.PremiumAccountPrx.uncheckedCast(current.adapter.add(account, identity))
-        else:
-            identity = Ice.stringToIdentity("%s/%s" % ('standard', id))
-            proxy = Bank.AccountPrx.uncheckedCast(current.adapter.add(account, identity))
-
-        return proxy
-
-    def logout(self, proxy, current=None):
-        identity = proxy.ice_getIdentity()
-
-        current.adapter.remove(identity)
+        return account
 
 ######################################
 # server and client methods

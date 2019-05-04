@@ -44,7 +44,6 @@ module Bank{
     interface AccountManagement{
         RegistrationInfo register(ClientData clientData) throws AccountException;
         Account* login() throws AccountException;
-        void logout(Account* account);
     };
 
 };
