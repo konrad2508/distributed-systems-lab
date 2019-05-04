@@ -132,33 +132,41 @@
 
     Slice.defineStruct(Bank.ClientData, false, true);
 
-    Bank.AccountData = class
+    Slice.defineDictionary(Bank, "LoanHistory", "LoanHistoryHelper", "Ice.StringHelper", "Ice.StringHelper", false, undefined, undefined);
+
+    Slice.defineSequence(Bank, "LoanHistorySeqHelper", "Bank.LoanHistoryHelper", false);
+
+    const iceC_Bank_AccountData_ids = [
+        "::Bank::AccountData",
+        "::Ice::Object"
+    ];
+
+    Bank.AccountData = class extends Ice.Value
     {
-        constructor(accountType = Bank.AccountType.Standard, funds = 0.0)
+        constructor(accountType = Bank.AccountType.Standard, funds = 0.0, loans = undefined)
         {
+            super();
             this.accountType = accountType;
             this.funds = funds;
+            this.loans = loans;
         }
 
-        _write(ostr)
+        _iceWriteMemberImpl(ostr)
         {
             Bank.AccountType._write(ostr, this.accountType);
             ostr.writeDouble(this.funds);
+            Bank.LoanHistorySeqHelper.writeOptional(ostr, 1, this.loans);
         }
 
-        _read(istr)
+        _iceReadMemberImpl(istr)
         {
             this.accountType = Bank.AccountType._read(istr);
             this.funds = istr.readDouble();
-        }
-
-        static get minWireSize()
-        {
-            return  9;
+            this.loans = Bank.LoanHistorySeqHelper.readOptional(istr, 1);
         }
     };
 
-    Slice.defineStruct(Bank.AccountData, false, true);
+    Slice.defineValue(Bank.AccountData, iceC_Bank_AccountData_ids[0], false);
 
     Bank.RegistrationInfo = class
     {
@@ -203,7 +211,7 @@
 
     Slice.defineOperations(Bank.Account, Bank.AccountPrx, iceC_Bank_Account_ids, 0,
     {
-        "getAccountData": [, , , , [Bank.AccountData], , , , , ]
+        "getAccountData": [, , , , ["Bank.AccountData", true], , , , , true]
     });
 
     const iceC_Bank_PremiumAccount_ids = [
@@ -233,7 +241,7 @@
 
     Slice.defineOperations(Bank.PremiumAccount, Bank.PremiumAccountPrx, iceC_Bank_PremiumAccount_ids, 1,
     {
-        "getLoan": [, , , , [6], [[6], [7]], ,
+        "getLoan": [, , , , [6], [[6], [7], [3]], ,
         [
             Bank.CurrencyException
         ], , ]

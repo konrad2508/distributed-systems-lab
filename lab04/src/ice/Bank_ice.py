@@ -148,37 +148,38 @@ if 'ClientData' not in _M_Bank.__dict__:
     _M_Bank.ClientData = ClientData
     del ClientData
 
+if '_t_LoanHistory' not in _M_Bank.__dict__:
+    _M_Bank._t_LoanHistory = IcePy.defineDictionary('::Bank::LoanHistory', (), IcePy._t_string, IcePy._t_string)
+
+if '_t_LoanHistorySeq' not in _M_Bank.__dict__:
+    _M_Bank._t_LoanHistorySeq = IcePy.defineSequence('::Bank::LoanHistorySeq', (), _M_Bank._t_LoanHistory)
+
 if 'AccountData' not in _M_Bank.__dict__:
     _M_Bank.AccountData = Ice.createTempClass()
-    class AccountData(object):
-        def __init__(self, accountType=_M_Bank.AccountType.Standard, funds=0.0):
+    class AccountData(Ice.Value):
+        def __init__(self, accountType=_M_Bank.AccountType.Standard, funds=0.0, loans=Ice.Unset):
             self.accountType = accountType
             self.funds = funds
+            self.loans = loans
 
-        def __eq__(self, other):
-            if other is None:
-                return False
-            elif not isinstance(other, _M_Bank.AccountData):
-                return NotImplemented
-            else:
-                if self.accountType != other.accountType:
-                    return False
-                if self.funds != other.funds:
-                    return False
-                return True
+        def ice_id(self):
+            return '::Bank::AccountData'
 
-        def __ne__(self, other):
-            return not self.__eq__(other)
+        @staticmethod
+        def ice_staticId():
+            return '::Bank::AccountData'
 
         def __str__(self):
             return IcePy.stringify(self, _M_Bank._t_AccountData)
 
         __repr__ = __str__
 
-    _M_Bank._t_AccountData = IcePy.defineStruct('::Bank::AccountData', AccountData, (), (
-        ('accountType', (), _M_Bank._t_AccountType),
-        ('funds', (), IcePy._t_double)
+    _M_Bank._t_AccountData = IcePy.defineValue('::Bank::AccountData', AccountData, -1, (), False, False, None, (
+        ('accountType', (), _M_Bank._t_AccountType, False, 0),
+        ('funds', (), IcePy._t_double, False, 0),
+        ('loans', (), _M_Bank._t_LoanHistorySeq, True, 1)
     ))
+    AccountData._ice_type = _M_Bank._t_AccountData
 
     _M_Bank.AccountData = AccountData
     del AccountData
@@ -344,14 +345,14 @@ if 'PremiumAccountPrx' not in _M_Bank.__dict__:
     _M_Bank.PremiumAccountPrx = Ice.createTempClass()
     class PremiumAccountPrx(_M_Bank.AccountPrx):
 
-        def getLoan(self, amount, currency, context=None):
-            return _M_Bank.PremiumAccount._op_getLoan.invoke(self, ((amount, currency), context))
+        def getLoan(self, amount, currency, length, context=None):
+            return _M_Bank.PremiumAccount._op_getLoan.invoke(self, ((amount, currency, length), context))
 
-        def getLoanAsync(self, amount, currency, context=None):
-            return _M_Bank.PremiumAccount._op_getLoan.invokeAsync(self, ((amount, currency), context))
+        def getLoanAsync(self, amount, currency, length, context=None):
+            return _M_Bank.PremiumAccount._op_getLoan.invokeAsync(self, ((amount, currency, length), context))
 
-        def begin_getLoan(self, amount, currency, _response=None, _ex=None, _sent=None, context=None):
-            return _M_Bank.PremiumAccount._op_getLoan.begin(self, ((amount, currency), _response, _ex, _sent, context))
+        def begin_getLoan(self, amount, currency, length, _response=None, _ex=None, _sent=None, context=None):
+            return _M_Bank.PremiumAccount._op_getLoan.begin(self, ((amount, currency, length), _response, _ex, _sent, context))
 
         def end_getLoan(self, _r):
             return _M_Bank.PremiumAccount._op_getLoan.end(self, _r)
@@ -385,7 +386,7 @@ if 'PremiumAccountPrx' not in _M_Bank.__dict__:
         def ice_staticId():
             return '::Bank::PremiumAccount'
 
-        def getLoan(self, amount, currency, current=None):
+        def getLoan(self, amount, currency, length, current=None):
             raise NotImplementedError("servant method 'getLoan' not implemented")
 
         def __str__(self):
@@ -396,7 +397,7 @@ if 'PremiumAccountPrx' not in _M_Bank.__dict__:
     _M_Bank._t_PremiumAccountDisp = IcePy.defineClass('::Bank::PremiumAccount', PremiumAccount, (), None, (_M_Bank._t_AccountDisp,))
     PremiumAccount._ice_type = _M_Bank._t_PremiumAccountDisp
 
-    PremiumAccount._op_getLoan = IcePy.Operation('getLoan', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), IcePy._t_double, False, 0), ((), IcePy._t_string, False, 0)), (), ((), IcePy._t_double, False, 0), (_M_Bank._t_CurrencyException,))
+    PremiumAccount._op_getLoan = IcePy.Operation('getLoan', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), IcePy._t_double, False, 0), ((), IcePy._t_string, False, 0), ((), IcePy._t_int, False, 0)), (), ((), IcePy._t_double, False, 0), (_M_Bank._t_CurrencyException,))
 
     _M_Bank.PremiumAccount = PremiumAccount
     del PremiumAccount

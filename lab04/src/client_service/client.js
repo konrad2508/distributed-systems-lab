@@ -113,6 +113,12 @@ const getAccountData = async () => {
     console.log();
     console.log(`Your account type: ${accountData.accountType}`);
     console.log(`Available funds: ${accountData.funds}`);
+
+    if (await account.ice_isA('::Bank::PremiumAccount')){
+        console.log('Loans:');
+        console.log(accountData.loans);
+    }
+
     console.log();
 };
 
@@ -159,7 +165,7 @@ const getLoan = async () => {
             loan_length = answer.loan_length;
         });
     try {
-        let loan = await account.getLoan(amount, currency);
+        let loan = await account.getLoan(amount, currency, loan_length);
         console.log();
         if (loan > 0) {
             console.log(`Loan attained successfully. You got: ${loan}`);
@@ -169,7 +175,7 @@ const getLoan = async () => {
         console.log();
     } catch (ex){
         console.log();
-        console.log(ex.message);
+        console.log(ex);
         console.log();
     }
 };

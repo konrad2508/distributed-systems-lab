@@ -19,9 +19,13 @@ module Bank{
         double income;
     };
 
-    struct AccountData{
+    dictionary<string, string> LoanHistory;
+    sequence<LoanHistory> LoanHistorySeq;
+
+    class AccountData{
         AccountType accountType;
         double funds;
+        optional(1) LoanHistorySeq loans;
     };
 
     struct RegistrationInfo{
@@ -34,7 +38,7 @@ module Bank{
     };
 
     interface PremiumAccount extends Account{
-        double getLoan(double amount, string currency) throws CurrencyException;
+        double getLoan(double amount, string currency, int length) throws CurrencyException;
     };
 
     interface AccountManagement{

@@ -32,7 +32,11 @@ class AccountI(Bank.Account):
 
 
 class PremiumAccountI(Bank.PremiumAccount, AccountI):
-    def getLoan(self, amount, currency, current=None):
+    def __init__(self, data, type, pwd):
+        super().__init__(data, type, pwd)
+        self.loan_history = []
+
+    def getLoan(self, amount, currency, length, current=None):
         currency = str.upper(str(currency))
 
         if currency not in list(currency_table.keys()):
@@ -41,7 +45,16 @@ class PremiumAccountI(Bank.PremiumAccount, AccountI):
         loan = amount * currency_table[currency]
         self.funds += loan
 
+        self.loan_history.append({
+            'currency': str(currency),
+            'amount': str(amount),
+            'length': str(length)
+        })
+
         return loan
+
+    def getAccountData(self, current=None):
+        return Bank.AccountData(self.type, self.funds, loans=self.loan_history)
 
 
 class AccountManagementI(Bank.AccountManagement):
