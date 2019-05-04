@@ -1,3 +1,4 @@
+import sys
 import time
 import grpc
 import random
@@ -33,11 +34,11 @@ def init():
         currency_table[currency] = round(random.uniform(1, 6), 2)
 
 
-def start_server():
+def start_server(port):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     currency_pb2_grpc.add_CurrencySubscriptionServicer_to_server(
         CurrencySubscription(), server)
-    server.add_insecure_port('localhost:50051')
+    server.add_insecure_port('localhost:%s' % port)
     server.start()
     try:
         while True:
@@ -66,5 +67,7 @@ if __name__ == '__main__':
     condition = Condition(lock)
     init()
 
-    Thread(target=start_server).start()
+    port = sys.argv[1]
+
+    Thread(target=start_server, args=[port]).start()
     change_values()

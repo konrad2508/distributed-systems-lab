@@ -114,12 +114,13 @@ class AccountManagementI(Bank.AccountManagement):
 
         return account
 
+
 ######################################
 # server and client methods
 ######################################
 
-def start_currency_client(requested_currencies):
-    with grpc.insecure_channel('localhost:50051') as channel:
+def start_currency_client(port, requested_currencies):
+    with grpc.insecure_channel('localhost:%s' % port) as channel:
         stub = currency_pb2_grpc.CurrencySubscriptionStub(channel)
 
         currencies_values = map(currency_pb2.Currency.Value, requested_currencies)
@@ -137,9 +138,9 @@ def start_currency_client(requested_currencies):
             currency_table[curr_name] = curr_value
 
 
-def start_bank_server():
+def start_bank_server(port):
     with Ice.initialize(sys.argv) as communicator:
-        adapter = communicator.createObjectAdapterWithEndpoints("Bank", "tcp -h localhost -p 10000")
+        adapter = communicator.createObjectAdapterWithEndpoints("Bank", "tcp -h localhost -p %s" % port)
 
         adapter.add(AccountManagementI(), Ice.stringToIdentity("management"))
 
@@ -155,7 +156,9 @@ currency_table = {}
 account_table = []
 
 if __name__ == '__main__':
-    currencies = map(str.upper, sys.argv[1:])
+    currency_port = sys.argv[1]
+    bank_port = sys.argv[2]
+    currencies = map(str.upper, sys.argv[3:])
 
-    Thread(target=start_currency_client, args=[currencies]).start()
-    start_bank_server()
+    Thread(target=start_currency_client, args=[currency_port, currencies]).start()
+    start_bank_server(bank_port)
