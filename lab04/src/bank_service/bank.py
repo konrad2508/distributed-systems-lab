@@ -162,6 +162,10 @@ currency_table = {}
 account_table = []
 
 if __name__ == '__main__':
+    if len(sys.argv) < 4:
+        print('Wrong number of arguments!')
+        exit(1)
+
     currency_port = sys.argv[1]
     bank_port = sys.argv[2]
     currencies = map(str.upper, sys.argv[3:])

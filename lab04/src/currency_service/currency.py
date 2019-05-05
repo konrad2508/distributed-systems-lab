@@ -63,6 +63,10 @@ def change_values():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print('Wrong number of arguments!')
+        exit(1)
+
     lock = RLock()
     condition = Condition(lock)
     init()
