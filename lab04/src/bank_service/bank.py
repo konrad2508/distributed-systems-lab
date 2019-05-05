@@ -57,6 +57,8 @@ class PremiumAccountI(Bank.PremiumAccount, AccountI):
             'length': str(length)
         })
 
+        print(self.loan_history)
+
         return loan
 
     def getAccountData(self, current=None):
@@ -91,6 +93,8 @@ class AccountManagementI(Bank.AccountManagement):
             'proxy': proxy
         }
         account_table.append(account_obj)
+
+        print(account_table)
 
         return Bank.RegistrationInfo(account_type, account_pwd)
 
@@ -136,6 +140,8 @@ def start_currency_client(port, requested_currencies):
             curr_name = currency_pb2.Currency.Name(curr.currency)
             curr_value = curr.value
             currency_table[curr_name] = curr_value
+
+            print(currency_table)
 
 
 def start_bank_server(port):
