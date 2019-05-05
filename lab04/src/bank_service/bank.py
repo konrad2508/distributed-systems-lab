@@ -74,7 +74,7 @@ class AccountManagementI(Bank.AccountManagement):
             raise Bank.AccountAlreadyExistsException('Account already exists!')
 
         account_type = Bank.AccountType.Premium if clientData.income >= 1000 else Bank.AccountType.Standard
-        account_pwd = 'TriHard 7'
+        account_pwd = '123'
 
         if account_type == Bank.AccountType.Premium:
             new_account = PremiumAccountI(clientData, account_type, account_pwd)
