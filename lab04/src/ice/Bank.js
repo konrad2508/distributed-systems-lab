@@ -64,7 +64,53 @@
         }
     };
 
-    Bank.CurrencyException = class extends Ice.UserException
+    Bank.InvalidCredentialsException = class extends Bank.AccountException
+    {
+        constructor(reason, _cause = "")
+        {
+            super(reason, _cause);
+        }
+
+        static get _parent()
+        {
+            return Bank.AccountException;
+        }
+
+        static get _id()
+        {
+            return "::Bank::InvalidCredentialsException";
+        }
+
+        _mostDerivedType()
+        {
+            return Bank.InvalidCredentialsException;
+        }
+    };
+
+    Bank.AccountAlreadyExistsException = class extends Bank.AccountException
+    {
+        constructor(reason, _cause = "")
+        {
+            super(reason, _cause);
+        }
+
+        static get _parent()
+        {
+            return Bank.AccountException;
+        }
+
+        static get _id()
+        {
+            return "::Bank::AccountAlreadyExistsException";
+        }
+
+        _mostDerivedType()
+        {
+            return Bank.AccountAlreadyExistsException;
+        }
+    };
+
+    Bank.UnrecognizedCurrencyException = class extends Ice.UserException
     {
         constructor(reason = "", _cause = "")
         {
@@ -79,12 +125,12 @@
 
         static get _id()
         {
-            return "::Bank::CurrencyException";
+            return "::Bank::UnrecognizedCurrencyException";
         }
 
         _mostDerivedType()
         {
-            return Bank.CurrencyException;
+            return Bank.UnrecognizedCurrencyException;
         }
 
         _writeMemberImpl(ostr)
@@ -213,7 +259,7 @@
     {
         "getAccountData": [, , , , ["Bank.AccountData", true], , ,
         [
-            Bank.AccountException
+            Bank.InvalidCredentialsException
         ], , true]
     });
 
@@ -246,8 +292,8 @@
     {
         "getLoan": [, , , , [6], [[6], [7], [3]], ,
         [
-            Bank.AccountException,
-            Bank.CurrencyException
+            Bank.InvalidCredentialsException,
+            Bank.UnrecognizedCurrencyException
         ], , ]
     });
 
@@ -268,11 +314,11 @@
     {
         "register": [, , , , [Bank.RegistrationInfo], [[Bank.ClientData]], ,
         [
-            Bank.AccountException
+            Bank.AccountAlreadyExistsException
         ], , ],
         "login": [, , , , ["Bank.AccountPrx"], , ,
         [
-            Bank.AccountException
+            Bank.InvalidCredentialsException
         ], , ]
     });
     exports.Bank = Bank;

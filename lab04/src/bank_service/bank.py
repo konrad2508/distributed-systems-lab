@@ -29,7 +29,7 @@ class AccountI(Bank.Account):
 
     def getAccountData(self, current=None):
         if not current.ctx or current.ctx['id'] != self.get_id() or current.ctx['pwd'] != self.get_pwd():
-            raise Bank.AccountException('Invalid credentials!')
+            raise Bank.InvalidCredentialsException('Invalid credentials!')
 
         return Bank.AccountData(self.type, self.funds)
 
@@ -41,12 +41,12 @@ class PremiumAccountI(Bank.PremiumAccount, AccountI):
 
     def getLoan(self, amount, currency, length, current=None):
         if not current.ctx or current.ctx['id'] != self.get_id() or current.ctx['pwd'] != self.get_pwd():
-            raise Bank.AccountException('Invalid credentials!')
+            raise Bank.InvalidCredentialsException('Invalid credentials!')
 
         currency = str.upper(str(currency))
 
         if currency not in list(currency_table.keys()):
-            raise Bank.CurrencyException('Bank does not support requested currency!')
+            raise Bank.InvalidCredentialsException('Bank does not support requested currency!')
 
         loan = amount * currency_table[currency]
         self.funds += loan
@@ -61,15 +61,15 @@ class PremiumAccountI(Bank.PremiumAccount, AccountI):
 
     def getAccountData(self, current=None):
         if not current.ctx or current.ctx['id'] != self.get_id() or current.ctx['pwd'] != self.get_pwd():
-            raise Bank.AccountException('Invalid credentials!')
+            raise Bank.InvalidCredentialsException('Invalid credentials!')
 
         return Bank.AccountData(self.type, self.funds, loans=self.loan_history)
 
 
 class AccountManagementI(Bank.AccountManagement):
     def register(self, clientData, current=None):
-        if any([clientData.id == acc.get_id() for acc in account_table]):
-            raise Bank.AccountException('Account already exists!')
+        if any([clientData.id == acc['account'].get_id() for acc in account_table]):
+            raise Bank.AccountAlreadyExistsException('Account already exists!')
 
         account_type = Bank.AccountType.Premium if clientData.income >= 1000 else Bank.AccountType.Standard
         account_pwd = 'TriHard 7'
@@ -96,7 +96,7 @@ class AccountManagementI(Bank.AccountManagement):
 
     def login(self, current=None):
         if not current.ctx:
-            raise Bank.AccountException('Specify login and password!')
+            raise Bank.InvalidCredentialsException('Specify login and password!')
 
         id = current.ctx['id']
         pwd = current.ctx['pwd']
@@ -107,10 +107,10 @@ class AccountManagementI(Bank.AccountManagement):
                 if acc['account'].get_pwd() == pwd:
                     account = acc['proxy']
                 else:
-                    raise Bank.AccountException('Invalid password!')
+                    raise Bank.InvalidCredentialsException('Invalid password!')
 
         if account is None:
-            raise Bank.AccountException('Account with that id does not exist!')
+            raise Bank.InvalidCredentialsException('Account with that id does not exist!')
 
         return account
 

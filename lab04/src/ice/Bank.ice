@@ -8,7 +8,13 @@ module Bank{
         string reason;
     };
 
-    exception CurrencyException{
+    exception InvalidCredentialsException extends AccountException{
+    };
+
+    exception AccountAlreadyExistsException extends AccountException{
+    };
+
+    exception UnrecognizedCurrencyException{
         string reason;
     };
 
@@ -34,16 +40,16 @@ module Bank{
     }
 
     interface Account{
-        AccountData getAccountData() throws AccountException;
+        AccountData getAccountData() throws InvalidCredentialsException;
     };
 
     interface PremiumAccount extends Account{
-        double getLoan(double amount, string currency, int length) throws CurrencyException, AccountException;
+        double getLoan(double amount, string currency, int length) throws UnrecognizedCurrencyException, InvalidCredentialsException;
     };
 
     interface AccountManagement{
-        RegistrationInfo register(ClientData clientData) throws AccountException;
-        Account* login() throws AccountException;
+        RegistrationInfo register(ClientData clientData) throws AccountAlreadyExistsException;
+        Account* login() throws InvalidCredentialsException;
     };
 
 };

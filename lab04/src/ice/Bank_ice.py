@@ -86,9 +86,47 @@ if 'AccountException' not in _M_Bank.__dict__:
     _M_Bank.AccountException = AccountException
     del AccountException
 
-if 'CurrencyException' not in _M_Bank.__dict__:
-    _M_Bank.CurrencyException = Ice.createTempClass()
-    class CurrencyException(Ice.UserException):
+if 'InvalidCredentialsException' not in _M_Bank.__dict__:
+    _M_Bank.InvalidCredentialsException = Ice.createTempClass()
+    class InvalidCredentialsException(_M_Bank.AccountException):
+        def __init__(self, reason=''):
+            _M_Bank.AccountException.__init__(self, reason)
+
+        def __str__(self):
+            return IcePy.stringifyException(self)
+
+        __repr__ = __str__
+
+        _ice_id = '::Bank::InvalidCredentialsException'
+
+    _M_Bank._t_InvalidCredentialsException = IcePy.defineException('::Bank::InvalidCredentialsException', InvalidCredentialsException, (), False, _M_Bank._t_AccountException, ())
+    InvalidCredentialsException._ice_type = _M_Bank._t_InvalidCredentialsException
+
+    _M_Bank.InvalidCredentialsException = InvalidCredentialsException
+    del InvalidCredentialsException
+
+if 'AccountAlreadyExistsException' not in _M_Bank.__dict__:
+    _M_Bank.AccountAlreadyExistsException = Ice.createTempClass()
+    class AccountAlreadyExistsException(_M_Bank.AccountException):
+        def __init__(self, reason=''):
+            _M_Bank.AccountException.__init__(self, reason)
+
+        def __str__(self):
+            return IcePy.stringifyException(self)
+
+        __repr__ = __str__
+
+        _ice_id = '::Bank::AccountAlreadyExistsException'
+
+    _M_Bank._t_AccountAlreadyExistsException = IcePy.defineException('::Bank::AccountAlreadyExistsException', AccountAlreadyExistsException, (), False, _M_Bank._t_AccountException, ())
+    AccountAlreadyExistsException._ice_type = _M_Bank._t_AccountAlreadyExistsException
+
+    _M_Bank.AccountAlreadyExistsException = AccountAlreadyExistsException
+    del AccountAlreadyExistsException
+
+if 'UnrecognizedCurrencyException' not in _M_Bank.__dict__:
+    _M_Bank.UnrecognizedCurrencyException = Ice.createTempClass()
+    class UnrecognizedCurrencyException(Ice.UserException):
         def __init__(self, reason=''):
             self.reason = reason
 
@@ -97,13 +135,13 @@ if 'CurrencyException' not in _M_Bank.__dict__:
 
         __repr__ = __str__
 
-        _ice_id = '::Bank::CurrencyException'
+        _ice_id = '::Bank::UnrecognizedCurrencyException'
 
-    _M_Bank._t_CurrencyException = IcePy.defineException('::Bank::CurrencyException', CurrencyException, (), False, None, (('reason', (), IcePy._t_string, False, 0),))
-    CurrencyException._ice_type = _M_Bank._t_CurrencyException
+    _M_Bank._t_UnrecognizedCurrencyException = IcePy.defineException('::Bank::UnrecognizedCurrencyException', UnrecognizedCurrencyException, (), False, None, (('reason', (), IcePy._t_string, False, 0),))
+    UnrecognizedCurrencyException._ice_type = _M_Bank._t_UnrecognizedCurrencyException
 
-    _M_Bank.CurrencyException = CurrencyException
-    del CurrencyException
+    _M_Bank.UnrecognizedCurrencyException = UnrecognizedCurrencyException
+    del UnrecognizedCurrencyException
 
 if 'ClientData' not in _M_Bank.__dict__:
     _M_Bank.ClientData = Ice.createTempClass()
@@ -334,7 +372,7 @@ if 'AccountPrx' not in _M_Bank.__dict__:
     _M_Bank._t_AccountDisp = IcePy.defineClass('::Bank::Account', Account, (), None, ())
     Account._ice_type = _M_Bank._t_AccountDisp
 
-    Account._op_getAccountData = IcePy.Operation('getAccountData', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (), (), ((), _M_Bank._t_AccountData, False, 0), (_M_Bank._t_AccountException,))
+    Account._op_getAccountData = IcePy.Operation('getAccountData', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (), (), ((), _M_Bank._t_AccountData, False, 0), (_M_Bank._t_InvalidCredentialsException,))
 
     _M_Bank.Account = Account
     del Account
@@ -397,7 +435,7 @@ if 'PremiumAccountPrx' not in _M_Bank.__dict__:
     _M_Bank._t_PremiumAccountDisp = IcePy.defineClass('::Bank::PremiumAccount', PremiumAccount, (), None, (_M_Bank._t_AccountDisp,))
     PremiumAccount._ice_type = _M_Bank._t_PremiumAccountDisp
 
-    PremiumAccount._op_getLoan = IcePy.Operation('getLoan', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), IcePy._t_double, False, 0), ((), IcePy._t_string, False, 0), ((), IcePy._t_int, False, 0)), (), ((), IcePy._t_double, False, 0), (_M_Bank._t_CurrencyException, _M_Bank._t_AccountException))
+    PremiumAccount._op_getLoan = IcePy.Operation('getLoan', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), IcePy._t_double, False, 0), ((), IcePy._t_string, False, 0), ((), IcePy._t_int, False, 0)), (), ((), IcePy._t_double, False, 0), (_M_Bank._t_UnrecognizedCurrencyException, _M_Bank._t_InvalidCredentialsException))
 
     _M_Bank.PremiumAccount = PremiumAccount
     del PremiumAccount
@@ -475,8 +513,8 @@ if 'AccountManagementPrx' not in _M_Bank.__dict__:
     _M_Bank._t_AccountManagementDisp = IcePy.defineClass('::Bank::AccountManagement', AccountManagement, (), None, ())
     AccountManagement._ice_type = _M_Bank._t_AccountManagementDisp
 
-    AccountManagement._op_register = IcePy.Operation('register', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), _M_Bank._t_ClientData, False, 0),), (), ((), _M_Bank._t_RegistrationInfo, False, 0), (_M_Bank._t_AccountException,))
-    AccountManagement._op_login = IcePy.Operation('login', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (), (), ((), _M_Bank._t_AccountPrx, False, 0), (_M_Bank._t_AccountException,))
+    AccountManagement._op_register = IcePy.Operation('register', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (((), _M_Bank._t_ClientData, False, 0),), (), ((), _M_Bank._t_RegistrationInfo, False, 0), (_M_Bank._t_AccountAlreadyExistsException,))
+    AccountManagement._op_login = IcePy.Operation('login', Ice.OperationMode.Normal, Ice.OperationMode.Normal, False, None, (), (), (), ((), _M_Bank._t_AccountPrx, False, 0), (_M_Bank._t_InvalidCredentialsException,))
 
     _M_Bank.AccountManagement = AccountManagement
     del AccountManagement
