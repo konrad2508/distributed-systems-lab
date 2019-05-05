@@ -27,9 +27,6 @@
     Bank.AccountType = Slice.defineEnum([
         ['Standard', 0], ['Premium', 1]]);
 
-    Bank.Currency = Slice.defineEnum([
-        ['USD', 0], ['EUR', 1], ['GBP', 2], ['PLN', 3]]);
-
     Bank.AccountException = class extends Ice.UserException
     {
         constructor(reason = "", _cause = "")

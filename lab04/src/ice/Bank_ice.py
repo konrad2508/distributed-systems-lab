@@ -43,30 +43,6 @@ if 'AccountType' not in _M_Bank.__dict__:
     _M_Bank.AccountType = AccountType
     del AccountType
 
-if 'Currency' not in _M_Bank.__dict__:
-    _M_Bank.Currency = Ice.createTempClass()
-    class Currency(Ice.EnumBase):
-
-        def __init__(self, _n, _v):
-            Ice.EnumBase.__init__(self, _n, _v)
-
-        def valueOf(self, _n):
-            if _n in self._enumerators:
-                return self._enumerators[_n]
-            return None
-        valueOf = classmethod(valueOf)
-
-    Currency.USD = Currency("USD", 0)
-    Currency.EUR = Currency("EUR", 1)
-    Currency.GBP = Currency("GBP", 2)
-    Currency.PLN = Currency("PLN", 3)
-    Currency._enumerators = { 0:Currency.USD, 1:Currency.EUR, 2:Currency.GBP, 3:Currency.PLN }
-
-    _M_Bank._t_Currency = IcePy.defineEnum('::Bank::Currency', Currency, (), Currency._enumerators)
-
-    _M_Bank.Currency = Currency
-    del Currency
-
 if 'AccountException' not in _M_Bank.__dict__:
     _M_Bank.AccountException = Ice.createTempClass()
     class AccountException(Ice.UserException):

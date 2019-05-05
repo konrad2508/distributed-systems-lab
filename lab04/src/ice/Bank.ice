@@ -2,8 +2,6 @@ module Bank{
 
     enum AccountType { Standard, Premium }
 
-    enum Currency { USD, EUR, GBP, PLN }
-
     exception AccountException{
         string reason;
     };
