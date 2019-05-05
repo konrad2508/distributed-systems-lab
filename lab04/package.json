@@ -1,0 +1,8 @@
+{
+  "name": "src",
+  "version": "1.0.0",
+  "dependencies": {
+    "ice": "^3.7.2",
+    "inquirer": "^6.3.1"
+  }
+}

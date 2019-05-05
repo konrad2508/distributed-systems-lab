@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+service CurrencySubscription {
+    rpc Subscribe (SubscribeRequest) returns (stream SubscribeResponse) {}
+}
+
+enum Currency {
+    USD = 0;
+    EUR = 1;
+    GBP = 2;
+    PLN = 3;
+}
+
+message SubscribeRequest {
+    repeated Currency currencies = 1;
+}
+
+message SubscribeResponse {
+    Currency currency = 1;
+    double value = 2;
+}
