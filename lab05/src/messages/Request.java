@@ -4,9 +4,9 @@ import java.io.Serializable;
 
 public class Request implements Serializable {
     private final MessageType type;
-    private final String arg;
+    private final Object arg;
 
-    public Request(MessageType type, String arg) {
+    public Request(MessageType type, Object arg) {
         this.type = type;
         this.arg = arg;
     }
@@ -15,7 +15,7 @@ public class Request implements Serializable {
         return type;
     }
 
-    public String getArg() {
+    public Object getArg() {
         return arg;
     }
 }

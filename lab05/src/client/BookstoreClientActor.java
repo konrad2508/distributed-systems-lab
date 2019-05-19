@@ -20,7 +20,6 @@ public class BookstoreClientActor extends AbstractActor {
                     if (s.startsWith("find")) type = MessageType.FIND;
                     else if (s.startsWith("order")) type = MessageType.ORDER;
                     else if (s.startsWith("stream")) type = MessageType.STREAM;
-                    else System.out.println(s);
 
                     try {
                         sendRequest(type, s);
@@ -44,6 +43,9 @@ public class BookstoreClientActor extends AbstractActor {
                             break;
                         case STREAM:
                             System.out.println(r.getArg());
+                            break;
+                        case ERROR:
+                            System.out.println("ERROR: " + r.getArg());
                             break;
                         default:
                             System.out.println("ayy");

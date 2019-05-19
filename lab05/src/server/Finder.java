@@ -28,12 +28,7 @@ public class Finder implements Runnable {
                     break;
                 }
             }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignored){}
     }
 
     int getTitlePrice() {
