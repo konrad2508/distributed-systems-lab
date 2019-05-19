@@ -1,55 +1,55 @@
 package server;
 
-import akka.Done;
-import akka.NotUsed;
 import akka.actor.AbstractActor;
-import akka.actor.ActorSystem;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.stream.ActorMaterializer;
-import akka.stream.Materializer;
-import akka.stream.ThrottleMode;
-import akka.stream.javadsl.Sink;
-import akka.stream.javadsl.Source;
 import messages.MessageType;
 import messages.Request;
 import messages.Response;
-import scala.Int;
-import scala.concurrent.duration.Duration;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class BookstoreActor extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-    private final Orderer orderer = new Orderer("orders.txt");
+
+    private ActorRef streaming = null;
+    private ActorRef ordering = null;
 
     @Override
     public AbstractActor.Receive createReceive() {
         return receiveBuilder()
                 .match(Request.class, r -> {
                     MessageType type = r.getType();
+                    int titlePrice = findTitle(r.getArg());
+
                     if (type == MessageType.FIND) {
-                        int price = findTitle(r.getArg());
-                        Response res = new Response(MessageType.FIND, price);
+                        Response res = new Response(MessageType.FIND, titlePrice);
                         getSender().tell(res, null);
                     } else if (type == MessageType.ORDER) {
-                        boolean result = orderTitle(r.getArg());
-                        Response res = new Response(MessageType.ORDER, result);
-                        getSender().tell(res, null);
+                        if (titlePrice == -1){
+                            Response res = new Response(MessageType.ORDER, false);
+                            getSender().tell(res, null);
+                        } else {
+                            Request order = new Request(MessageType.ORDER, r.getArg());
+                            ordering.tell(order, getSender());
+                        }
                     } else if (type == MessageType.STREAM) {
-                        streamTitle(r.getArg());
+                        if (titlePrice != -1){
+                            Request stream = new Request(MessageType.STREAM, r.getArg());
+                            streaming.tell(stream, getSender());
+                        }
                     } else {
                         System.out.println("ayy");
                     }
                 })
                 .matchAny(o -> log.info("received unknown message"))
                 .build();
+    }
+
+    @Override
+    public void preStart() {
+        streaming = context().actorOf(Props.create(StreamingActor.class), "streaming");
+        ordering = context().actorOf(Props.create(OrderingActor.class), "ordering");
     }
 
     private int findTitle(String title) throws InterruptedException {
@@ -68,21 +68,5 @@ public class BookstoreActor extends AbstractActor {
         return Math.max(finder1.getTitlePrice(), finder2.getTitlePrice());
     }
 
-    private boolean orderTitle(String title) throws InterruptedException {
-        if (findTitle(title) == -1) return false;
-        else return orderer.writeToFile(title);
-    }
-
-    private void streamTitle(String title) throws IOException, InterruptedException {
-        if (findTitle(title) == -1) return;
-
-        Materializer materializer = ActorMaterializer.create(getContext().getSystem());
-        Stream<String> stream = Files.lines(Paths.get("./src/data/" + title + ".txt"));
-        Source<String, NotUsed> source = Source.from(stream::iterator);
-
-        source.map(o -> new Response(MessageType.STREAM, o.toString()))
-                .throttle(1, Duration.create(1, TimeUnit.SECONDS), 1, ThrottleMode.shaping())
-                .runWith(Sink.actorRef(getSender(), null), materializer);
-    }
 }
 

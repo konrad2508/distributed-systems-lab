@@ -2,13 +2,11 @@ package client;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorSelection;
-import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import messages.Request;
 import messages.MessageType;
 import messages.Response;
-import server.BookstoreActor;
 
 public class BookstoreClientActor extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
@@ -53,12 +51,6 @@ public class BookstoreClientActor extends AbstractActor {
                 })
                 .matchAny(o -> log.info("received unknown message"))
                 .build();
-    }
-
-    // optional
-    @Override
-    public void preStart() {
-        context().actorOf(Props.create(BookstoreActor.class), "bookstore");
     }
 
     private void sendRequest(MessageType type, String message) {
