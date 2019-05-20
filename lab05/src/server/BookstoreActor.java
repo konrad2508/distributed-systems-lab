@@ -7,9 +7,6 @@ import akka.japi.pf.DeciderBuilder;
 import messages.*;
 import scala.concurrent.duration.Duration;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 public class BookstoreActor extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
     private final Orderer orderer = new Orderer("orders.txt");
@@ -57,9 +54,7 @@ public class BookstoreActor extends AbstractActor {
 
     private static SupervisorStrategy strategy
             = new OneForOneStrategy(10, Duration.create("1 minute"), DeciderBuilder
-            .match(IOException.class, e -> SupervisorStrategy.restart())
-            .match(InterruptedException.class, e -> SupervisorStrategy.restart())
-            .matchAny(o -> SupervisorStrategy.restart())
+            .matchAny(o -> SupervisorStrategy.stop())
             .build());
 
     @Override

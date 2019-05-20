@@ -1,7 +1,6 @@
 package server;
 
 import akka.actor.*;
-import akka.japi.pf.DeciderBuilder;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import messages.MessageType;
@@ -10,8 +9,6 @@ import messages.Response;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import java.util.concurrent.TimeoutException;
 
 public class FindingActor extends AbstractActor {
     @Override
@@ -40,13 +37,4 @@ public class FindingActor extends AbstractActor {
                 .build();
     }
 
-    private static SupervisorStrategy strategy
-            = new OneForOneStrategy(10, Duration.create("1 second"), DeciderBuilder
-            .match(TimeoutException.class, e -> SupervisorStrategy.stop())
-            .build());
-
-    @Override
-    public SupervisorStrategy supervisorStrategy () {
-        return strategy;
-    }
 }
