@@ -2,19 +2,28 @@ const zookeeper = require('node-zookeeper-client');
 const inquirer = require('inquirer');
 const pressAnyKey = require('press-any-key');
 const { execFile } = require('child_process');
+const ps = require('ps-node');
 
 let client;
 
 
-const createZWatcher = () => {
-    execFile('calc', (error, stdout, stderr) => {
+const onCreateZ = () => {
+    execFile('notepad', (error, stdout, stderr) => {
         if (error) {
             throw error;
         }
         console.log(stdout);
     });
+};
 
-    client.exists('/z', createZWatcher, () => {})
+
+const onDeleteZ = () => {
+    execFile('taskkill /im notepad.exe', (error, stdout, stderr) => {
+        // if (error) {
+        //     throw error;
+        // }
+        // console.log(stdout);
+    });
 };
 
 
@@ -29,7 +38,7 @@ const createZ = async () => {
                 return;
             }
 
-            client.exists('/z', createZWatcher, () => {});
+            client.exists('/z', onDeleteZ, () => {});
             console.log('Node: %s is created.', path);
         }
     );
@@ -51,6 +60,7 @@ const deleteZ = async () => {
                 return;
             }
 
+            client.exists('/z', onCreateZ, () => {});
             console.log('Node is deleted.');
         });
     });
@@ -99,6 +109,9 @@ const viewTree = async () => {
 
     client = zookeeper.createClient('localhost:2181');
     client.connect();
+    client.exists('/z', onCreateZ, (err) => {
+        if (err) console.log(err);
+    });
 
     let loop = true;
     while (loop) {
