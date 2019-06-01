@@ -1,28 +1,33 @@
 const zookeeper = require('node-zookeeper-client');
 const inquirer = require('inquirer');
 const pressAnyKey = require('press-any-key');
-const { execFile } = require('child_process');
-const ps = require('ps-node');
+const {execFile} = require('child_process');
 
 let client;
 
 
-const onCreateZ = () => {
-    execFile('notepad', (error, stdout, stderr) => {
-        if (error) {
-            throw error;
-        }
-        console.log(stdout);
-    });
+const zWatcher = (event) => {
+    switch (event.getName()) {
+        case 'NODE_DELETED':
+            execFile('taskkill', ['/im', 'notepad.exe'], (error, stdout, stderr) => {
+                if (error) console.log(error)
+            });
+
+            break;
+        case 'NODE_CREATED':
+            execFile('notepad', (error, stdout, stderr) => {
+                if (error) console.log(error)
+            });
+
+            break;
+    }
+    client.exists('/z', (event) => zWatcher(event), () => {});
 };
 
 
-const onDeleteZ = () => {
-    execFile('taskkill /im notepad.exe', (error, stdout, stderr) => {
-        // if (error) {
-        //     throw error;
-        // }
-        // console.log(stdout);
+const zChildrenWatcher = (event) => {
+    client.getChildren('/z', (event) => zChildrenWatcher(event), (error, children, stats) => {
+        if (children) console.log(`Current children count: ${children.length}`);
     });
 };
 
@@ -38,20 +43,19 @@ const createZ = async () => {
                 return;
             }
 
-            client.exists('/z', onDeleteZ, () => {});
+            client.getChildren('/z', (event) => zChildrenWatcher(event), () => {});
             console.log('Node: %s is created.', path);
         }
     );
 
-    await pressAnyKey('Press any key to continue...').then(console.clear);
+    await pressAnyKey('Press any key to continue...\n').then(console.clear);
 };
 
 
 const deleteZ = async () => {
     client.getChildren('/z', null, (error, children, stats) => {
         children.forEach((child) => {
-            client.remove(`/z/${child}`, -1, () => {
-            })
+            client.remove(`/z/${child}`, -1, () => {})
         });
 
         client.remove('/z', -1, (error) => {
@@ -60,12 +64,11 @@ const deleteZ = async () => {
                 return;
             }
 
-            client.exists('/z', onCreateZ, () => {});
             console.log('Node is deleted.');
         });
     });
 
-    await pressAnyKey('Press any key to continue...').then(console.clear);
+    await pressAnyKey('Press any key to continue...\n').then(console.clear);
 };
 
 
@@ -84,7 +87,7 @@ const createChild = async (name) => {
         }
     );
 
-    await pressAnyKey('Press any key to continue...').then(console.clear);
+    await pressAnyKey('Press any key to continue...\n').then(console.clear);
 };
 
 
@@ -96,11 +99,9 @@ const viewTree = async () => {
         }
 
         console.log('Children are: %j.', children);
-        console.log();
-        console.log(stats);
     });
 
-    await pressAnyKey('Press any key to continue...').then(console.clear);
+    await pressAnyKey('Press any key to continue...\n').then(console.clear);
 };
 
 
@@ -109,9 +110,7 @@ const viewTree = async () => {
 
     client = zookeeper.createClient('localhost:2181');
     client.connect();
-    client.exists('/z', onCreateZ, (err) => {
-        if (err) console.log(err);
-    });
+    client.exists('/z', (event) => zWatcher(event), () => {});
 
     let loop = true;
     while (loop) {
@@ -167,5 +166,6 @@ const viewTree = async () => {
             default:
         }
     }
+
     client.close();
 }());
