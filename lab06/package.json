@@ -1,0 +1,16 @@
+{
+  "name": "lab06",
+  "version": "1.0.0",
+  "description": "zookeeper task solution",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "node-zookeeper-client": "^0.2.3",
+    "inquirer": "^6.3.1",
+    "press-any-key": "^0.1.1"
+  },
+  "author": "konrad2508",
+  "license": "ISC"
+}
