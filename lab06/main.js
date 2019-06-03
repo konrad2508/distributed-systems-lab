@@ -4,7 +4,7 @@ const pressAnyKey = require('press-any-key');
 const {execFile} = require('child_process');
 
 let client;
-
+let servers = 'localhost:2181, localhost:2182, localhost:2183';
 
 const zWatcher = (event) => {
     switch (event.getName()) {
@@ -108,7 +108,7 @@ const viewTree = async () => {
 (async function () {
     console.clear();
 
-    client = zookeeper.createClient('localhost:2181');
+    client = zookeeper.createClient(servers);
     client.connect();
     client.exists('/z', (event) => zWatcher(event), () => {});
 
